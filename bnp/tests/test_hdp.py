@@ -58,23 +58,13 @@ def test_hdp_transform():
         'max_iter': 10,
     }
     hdp = HierarchicalDirichletProcess(**params)
+
+    assert_raises_regexp(NotFittedError, r"^no 'lambda_' attribute",
+                         hdp.transform, X)
     hdp.fit(X)
     transformed = hdp.transform(X)
     assert_equal(transformed.shape[0], X.shape[0])
     assert_equal(transformed.shape[1], 20)
-
-
-def test_hdp_transform_no_fit():
-    """Test HDP transform"""
-    _, X = _build_sparse_mtx()
-    params = {
-        'n_topic_truncate': 20,
-        'n_doc_truncate': 5,
-        'learning_method': 'online',
-    }
-    hdp = HierarchicalDirichletProcess(**params)
-    assert_raises_regexp(NotFittedError, r"^no 'lambda_' attribute",
-                         hdp.transform, X)
 
 
 def test_hdp_fit_transform():
@@ -95,3 +85,23 @@ def test_hdp_fit_transform():
     hdp2 = HierarchicalDirichletProcess(**params)
     transformed_2 = hdp2.fit_transform(X)
     assert_almost_equal(transformed_1, transformed_2)
+
+
+def test_hdp_topic_distribution():
+    """Test HDP topic_distribution"""
+    _, X = _build_sparse_mtx()
+    params = {
+        'n_topic_truncate': 20,
+        'n_doc_truncate': 5,
+        'learning_method': 'batch',
+        'max_iter': 10,
+        'random_state': 1,
+    }
+    hdp = HierarchicalDirichletProcess(**params)
+
+    assert_raises_regexp(NotFittedError, r"^no 'lambda_' attribute",
+                         hdp.transform, X)
+
+    hdp.fit(X)
+    topic_distr = hdp.topic_distribution()
+    assert_almost_equal(np.sum(topic_distr), 1.0)

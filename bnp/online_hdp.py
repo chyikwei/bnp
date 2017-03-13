@@ -23,7 +23,9 @@ from sklearn.exceptions import NotFittedError
 from sklearn.utils.extmath import logsumexp
 from sklearn.externals.joblib import Parallel, delayed
 
-from .utils.expectation import log_dirichlet_expectation, log_stick_expectation
+from .utils.expectation import (log_dirichlet_expectation,
+                                log_stick_expectation,
+                                stick_expectation)
 
 EPS = np.finfo(np.float).eps
 
@@ -89,7 +91,7 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick, n_doc_truncat
         elog_beta_d = elog_beta[:, ids]
         elog_beta_d_weighted = elog_beta_d * cnts
         # exp_elog_beta_sum, shape = (K,)
-        exp_elog_beta_sum = np.exp(np.sum(elog_beta_d_weighted, axis=1))
+        exp_elog_beta_sum = np.exp(np.sum(elog_beta_d_weighted, axis=1)) + EPS
         # normalize
         exp_elog_beta_sum /= np.sum(exp_elog_beta_sum)
         # initialize `zeta` (step 5. in ref [1]), shape = (T, K)
@@ -335,7 +337,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         # Note: use uniform distribution here based on [3]
         # TODO: test Beta(1., omega) later
         self.v_stick_ = np.array([np.ones(self.n_topic_truncate-1),
-            np.arange(self.n_topic_truncate-1, 0, -1)])
+                                  np.arange(self.n_topic_truncate-1, 0, -1)])
         self.elog_stick_ = log_stick_expectation(self.v_stick_)
 
     def _init_min_batch_parameters(self):
@@ -346,7 +348,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         if rhot < 0.0: 
             rhot = 0.0
             # DEBUG
-            print 'rhot become 0.0 at n_min_batch_iter_ = %d' % self.n_min_batch_iter_
+            #print 'rhot become 0.0 at n_min_batch_iter_ = %d' % self.n_min_batch_iter_
         self.n_min_batch_iter_ += 1
         return rhot
 
@@ -406,7 +408,6 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
             sstats_lambda *= weight
             self.lambda_ *= (1. - weight)
             self.lambda_ += sstats_lambda
-            self.elog_beta_ = log_dirichlet_expectation(self.lambda_)
 
             # update v_stick
             sstats_v_stick = sstats['v_stick']
@@ -424,12 +425,17 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
             self.v_stick_ += v_stick_new
         else:
             # batch update
+            # lambda
             self.lambda_ = self.eta + sstats['lambda']
 
+            # stick
             self.v_stick_[0] = 1. + sstats['v_stick'][:n_topics-1]
             # flip -> cumsum -> flip back
             self.v_stick_[1] = self.omega + \
                 np.flipud(np.cumsum(np.flipud(sstats['v_stick'][1:])))
+
+        self.elog_beta_ = log_dirichlet_expectation(self.lambda_)
+        self.elog_stick_ = log_stick_expectation(self.v_stick_)
 
     def partial_fit(self, X, y=None):
         """Online VB with Mini-Batch update.
@@ -527,6 +533,21 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                                               cal_doc_distr=True,
                                               parallel=parallel)
         return doc_topic_distr
+
+    def topic_distribution(self):
+        """Topic distribution from stick-break process
+
+        Returns
+        -------
+        topic_distr : shape=(n_topics,)
+            topic distribution from stick-breaking process. (sum to 1.)
+        """
+        if not hasattr(self, "lambda_"):
+            raise NotFittedError("no 'lambda_' attribute in model."
+                                 " Please fit model first.")
+
+        topic_distr = stick_expectation(self.v_stick_)
+        return topic_distr
 
     def score(self, X, y=None):
         """Calculate approximate log-likelihood as score.
