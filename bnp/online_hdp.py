@@ -129,11 +129,11 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick, n_doc_truncat
             # check convergence
             m_change = mean_change(last_phi_d, phi_d)
             if m_change < mean_change_tol:
-                print "converged iter: %d" % (n_iter)
+                #print "converged iter: %d" % (n_iter)
                 break
-            else:
+            #else:
                 # DEBUG. delete later
-                print "iter %d mean_change: %.5f" % (n_iter, m_change)
+                #print "iter %d mean_change: %.5f" % (n_iter, m_change)
 
         # update doc topic distribution
         if cal_doc_distr:
@@ -368,6 +368,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
             doc_topics, sstats_list = zip(*results)
         
             doc_topic_distr = np.vstack(doc_topics) if cal_doc_distr else None
+            sstats = None
             if cal_sstats:
                 lambda_sstats = np.zeros(self.lambda_.shape)
                 v_stick_sstats = np.zeros((self.n_topic_truncate, ))
@@ -493,6 +494,8 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                                          cal_doc_distr=False,
                                          parallel=parallel)
                 self._m_step(sstats, n_samples=X.shape[0], online_update=False)
+                # TODO: check perplexity
+
         return self
 
     def transform(self, X):
@@ -517,7 +520,13 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         X = self._check_non_neg_array(
             X, "HierarchicalDirichletProcess.transform")
 
-
+        n_jobs = _get_n_jobs(self.n_jobs)
+        with Parallel(n_jobs=n_jobs, verbose=max(0, self.verbose - 1)) as parallel:
+            doc_topic_distr, _ = self._e_step(X,
+                                              cal_sstats=False,
+                                              cal_doc_distr=True,
+                                              parallel=parallel)
+        return doc_topic_distr
 
     def score(self, X, y=None):
         """Calculate approximate log-likelihood as score.

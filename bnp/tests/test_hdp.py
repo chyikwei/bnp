@@ -3,8 +3,9 @@ from scipy.linalg import block_diag
 from scipy.sparse import csr_matrix
 from scipy.special import psi
 from sklearn.externals.six.moves import xrange
-
-from sklearn.utils.testing import assert_almost_equal
+from sklearn.exceptions import NotFittedError
+from sklearn.utils.testing import (assert_almost_equal, assert_raises_regexp,
+                                   assert_equal)
 
 from bnp.online_hdp import HierarchicalDirichletProcess
 
@@ -18,10 +19,10 @@ def _build_sparse_mtx(n_topics=10):
     return (n_topics, X)
 
 
-def dumb_hdp_fit_test():
+def test_hdp_fit():
     """Test HDP fit"""
 
-    n_topics, X = _build_sparse_mtx()
+    _, X = _build_sparse_mtx()
     params = {
         'n_topic_truncate': 20,
         'n_doc_truncate': 5,
@@ -32,10 +33,10 @@ def dumb_hdp_fit_test():
     hdp.fit(X)
 
 
-def dumb_hdp_partial_fit_test():
+def test_hdp_partial_fit():
     """Test HDP partial_fit"""
 
-    n_topics, X = _build_sparse_mtx()
+    _, X = _build_sparse_mtx()
     params = {
         'n_topic_truncate': 20,
         'n_doc_truncate': 5,
@@ -44,3 +45,53 @@ def dumb_hdp_partial_fit_test():
     hdp = HierarchicalDirichletProcess(**params)
     for _ in xrange(10):
         hdp.partial_fit(X)
+
+
+def test_hdp_transform():
+    """Test HDP transform"""
+
+    _, X = _build_sparse_mtx()
+    params = {
+        'n_topic_truncate': 20,
+        'n_doc_truncate': 5,
+        'learning_method': 'batch',
+        'max_iter': 10,
+    }
+    hdp = HierarchicalDirichletProcess(**params)
+    hdp.fit(X)
+    transformed = hdp.transform(X)
+    assert_equal(transformed.shape[0], X.shape[0])
+    assert_equal(transformed.shape[1], 20)
+
+
+def test_hdp_transform_no_fit():
+    """Test HDP transform"""
+    _, X = _build_sparse_mtx()
+    params = {
+        'n_topic_truncate': 20,
+        'n_doc_truncate': 5,
+        'learning_method': 'online',
+    }
+    hdp = HierarchicalDirichletProcess(**params)
+    assert_raises_regexp(NotFittedError, r"^no 'lambda_' attribute",
+                         hdp.transform, X)
+
+
+def test_hdp_fit_transform():
+    """Test HDP fit_transform"""
+
+    _, X = _build_sparse_mtx()
+    params = {
+        'n_topic_truncate': 20,
+        'n_doc_truncate': 5,
+        'learning_method': 'batch',
+        'max_iter': 10,
+        'random_state': 1,
+    }
+    hdp1 = HierarchicalDirichletProcess(**params)
+    hdp1.fit(X)
+    transformed_1 = hdp1.transform(X)
+
+    hdp2 = HierarchicalDirichletProcess(**params)
+    transformed_2 = hdp2.fit_transform(X)
+    assert_almost_equal(transformed_1, transformed_2)
