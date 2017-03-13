@@ -11,6 +11,7 @@ and the code structure is the same.
 # Author: Chyi-Kwei Yau
 # Original implementation: Chong Wang
 
+from __future__ import print_function
 
 import numpy as np
 import scipy.sparse as sp
@@ -87,6 +88,10 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
         else:
             ids = np.nonzero(X[idx_d, :])[0]
             cnts = X[idx_d, ids]
+
+        # check if doc is empty
+        if ids.shape[0] == 0:
+            continue
 
         # elog_beta_d, shape = (K, N_unique)
         elog_beta_d = elog_beta[:, ids]
@@ -502,6 +507,9 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                                          cal_doc_distr=False,
                                          parallel=parallel)
                 self._m_step(sstats, n_samples=X.shape[0], online_update=False)
+
+                if self.verbose:
+                    print("iteration: %d" % (i + 1))
                 # TODO: check perplexity
 
         return self
