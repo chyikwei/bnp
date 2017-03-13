@@ -8,10 +8,9 @@ from sklearn.utils.testing import assert_almost_equal
 
 from bnp.online_hdp import HierarchicalDirichletProcess
 
-def _build_sparse_mtx():
-    # Create 3 topics and each topic has 3 distinct words.
+def _build_sparse_mtx(n_topics=10):
+    # Create n_topics and each topic has 3 distinct words.
     # (Each word only belongs to a single topic.)
-    n_topics = 10
     block = n_topics * np.ones((3, 3))
     blocks = [block] * n_topics
     X = block_diag(*blocks)
