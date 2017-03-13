@@ -35,6 +35,10 @@ class TestLogStickExpectation(unittest.TestCase):
 
     def setUp(self):
         self.rand = RandomState(0)
+        self.num_stick = 100
+        self.uniform_stick = np.array([
+            np.ones(self.num_stick-1),
+            np.arange(self.num_stick-1, 0, -1)])
 
     def test_log_stick_expectation_shape(self):
         num_stick = self.rand.randint(100, 200)
@@ -43,10 +47,9 @@ class TestLogStickExpectation(unittest.TestCase):
         assert_equal(expectation_stick.shape, (num_stick,))
 
     def test_uniform_log_stick_expectation(self):
-        num_stick = 100
-        var_sticks = np.array([np.ones(num_stick-1), np.arange(num_stick-1, 0, -1)])
-        expectation_stick = log_stick_expectation(var_sticks)
-        all_equal_stick = np.ones(expectation_stick.shape) * expectation_stick[0]
+        expectation_stick = log_stick_expectation(self.uniform_stick)
+        shape = expectation_stick.shape
+        all_equal_stick = np.ones(shape) * expectation_stick[0]
         assert_almost_equal(expectation_stick, all_equal_stick)
 
 
@@ -55,6 +58,10 @@ class TestStickExpectation(unittest.TestCase):
 
     def setUp(self):
         self.rand = RandomState(0)
+        self.num_stick = 100
+        self.uniform_stick = np.array([
+            np.ones(self.num_stick-1),
+            np.arange(self.num_stick-1, 0, -1)])
 
     def test_stick_expectation_shape(self):
         num_stick = self.rand.randint(100, 200)
@@ -64,10 +71,8 @@ class TestStickExpectation(unittest.TestCase):
         assert_almost_equal(np.sum(expectation_stick), 1.0)
 
     def test_uniform_stick_expectation(self):
-        num_stick = 100
-        var_sticks = np.array([np.ones(num_stick-1), np.arange(num_stick-1, 0, -1)])
-        expectation_stick = stick_expectation(var_sticks)
-        all_equal_stick = np.ones(expectation_stick.shape) * expectation_stick[0]
+        expectation_stick = stick_expectation(self.uniform_stick)
+        shape = expectation_stick.shape
+        all_equal_stick = np.ones(shape) * expectation_stick[0]
         assert_almost_equal(expectation_stick, all_equal_stick)
         assert_almost_equal(np.sum(expectation_stick), 1.0)
-

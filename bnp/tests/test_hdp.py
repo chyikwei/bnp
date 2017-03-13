@@ -9,6 +9,7 @@ from sklearn.utils.testing import (assert_almost_equal, assert_raises_regexp,
 
 from bnp.online_hdp import HierarchicalDirichletProcess
 
+
 def _build_sparse_mtx(n_topics=10):
     # Create n_topics and each topic has 3 distinct words.
     # (Each word only belongs to a single topic.)

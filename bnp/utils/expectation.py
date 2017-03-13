@@ -16,7 +16,7 @@ def log_dirichlet_expectation(alpha):
     Parameters
     ----------
     alpha : array [n,] or [n, m]
-    
+
 
     Returns
     -------
@@ -51,11 +51,11 @@ def log_stick_expectation(sticks):
     # E[log(V_{k})] = psi(a_{k}) - psi(a_{k} + b_{k}) for k = {1,2,...,K-1}
     expectation_log_v = psi(sticks[0]) - stick_sum
     # E[log(1 - V_{k})] = psi(b_{k}) - psi(a_{k} + b_{k}) for k = {1,2,...,K-1}
-    expacetaion_log_1_minus_v = psi(sticks[1]) - stick_sum 
+    expacetaion_log_1_minus_v = psi(sticks[1]) - stick_sum
 
     size = sticks.shape[1] + 1
     Elogsticks = np.zeros(size)
-    ## E[log(sigma_{k}(V))] =  E[log(V_{k})] + sum_{1 to k-1}(E[log(1 - V_{l})])
+    # E[log(sigma_{k}(V))] = E[log(V_{k})] + sum_{1 to k-1}(E[log(1 - V_{l})])
     Elogsticks[0: (size - 1)] = expectation_log_v
     Elogsticks[1:] = Elogsticks[1:] + np.cumsum(expacetaion_log_1_minus_v)
     return Elogsticks

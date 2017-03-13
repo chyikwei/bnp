@@ -3,8 +3,8 @@
 This implementation is modified from Chong Wang's online-hdp code
 (https://github.com/blei-lab/online-hdp)
 
-Also, some code are from scikit-learn's online_lda implementation and the code structure is
-the same.
+Also, some code are from scikit-learn's online_lda implementation
+and the code structure is the same.
 (https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/decomposition/online_lda.py)
 """
 
@@ -34,8 +34,9 @@ def mean_change(arr1, arr2):
     return np.abs(arr1 - arr2).mean()
 
 
-def _update_local_variational_parameters(X, elog_beta, elog_stick, n_doc_truncate,
-                                         alpha, max_iters, mean_change_tol,
+def _update_local_variational_parameters(X, elog_beta, elog_stick,
+                                         n_doc_truncate, alpha,
+                                         max_iters, mean_change_tol,
                                          cal_sstats, cal_doc_distr):
     """Update local variational parameter
 
@@ -55,7 +56,7 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick, n_doc_truncat
             When `cal_sstats == False`, this will be None.
     """
     is_sparse_x = sp.issparse(X)
-    n_samples, n_features = X.shape
+    n_samples = X.shape[0]
     n_topic_truncate = elog_beta.shape[0]
 
     if cal_sstats:
@@ -95,7 +96,8 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick, n_doc_truncat
         # normalize
         exp_elog_beta_sum /= np.sum(exp_elog_beta_sum)
         # initialize `zeta` (step 5. in ref [1]), shape = (T, K)
-        zeta_d = np.repeat(exp_elog_beta_sum[np.newaxis, :], n_doc_truncate, axis=0)
+        zeta_d = np.repeat(exp_elog_beta_sum[np.newaxis, :],
+                           n_doc_truncate, axis=0)
 
         # initialize `phi` step 6 in ref [1]), shape = (N, T)
         log_phi_d = np.dot(zeta_d, elog_beta_d).T
@@ -131,11 +133,11 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick, n_doc_truncat
             # check convergence
             m_change = mean_change(last_phi_d, phi_d)
             if m_change < mean_change_tol:
-                #print "converged iter: %d" % (n_iter)
+                # print "converged iter: %d" % (n_iter)
                 break
-            #else:
+            # else:
                 # DEBUG. delete later
-                #print "iter %d mean_change: %.5f" % (n_iter, m_change)
+                # print "iter %d mean_change: %.5f" % (n_iter, m_change)
 
         # update doc topic distribution
         if cal_doc_distr:
@@ -151,12 +153,12 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick, n_doc_truncat
 
 class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
     """Hierarchical Dirichlet Process with Stochastic Variational Inference
-    
+
     HDP is the nonparametric version of LDA. The algorithm determines
     the number of topics based on data it fits instead of using a fixed
     number.
 
-    Note: This implementation is described in Fig. 9 in [1]. A lot 
+    Note: This implementation is described in Fig. 9 in [1]. A lot
           of greek letter are used as variable names. Check Fig. 8
           and Fig. 9 in [1] to know more about the alogrithm and each
           variable. Some of notation are different from original
@@ -167,7 +169,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
     ----------
     n_topic_truncate : int, optional (default=150)
         topics level truncation. In literature, it is `K`
-    
+
     n_doc_truncate: int, optional (default=20)
         document level truncation. In literature, it is `T`
 
@@ -179,7 +181,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
 
     eta: float, optional (default=1e-2)
         the topic Dirichlet prior
-    
+
     learning_method : 'batch' | 'online', default='online'
         Method used to update latent variable. Only used in `fit` method.
 
@@ -192,7 +194,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
     tau : float, optional (default=10.)
         A (positive) parameter that downweights early iterations in online
         learning.  It should be greater than 1.0.
-    
+
     scale: float, optional (default=1.0)
         scale for learning rate.
 
@@ -227,7 +229,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
 
     n_jobs : int, optional (default=1)
         The number of jobs to use in the E-step. If -1, all CPUs are used. For
-        ``n_jobs`` below -1, (n_cpus + 1 + n_jobs) are used. Only used in 
+        ``n_jobs`` below -1, (n_cpus + 1 + n_jobs) are used. Only used in
         batch learning now since it might not help when you do online learning
         with small batch size.
 
@@ -242,7 +244,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
     lambda_: array, [n_topic_truncate, n_features]
         Golbal Variational parameter for topic word distribution (`beta`)
         q(beta) ~ Direchlet(lambda)
-    
+
     v_stick_: array, [2, n_topic_truncate-1]
         Golbal Variational parameter for topic stick length (`v`)
         q(v_k) ~ Beta(a_[0, k], a_1[1, k])
@@ -257,8 +259,8 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
     ----------
     [1] "Stochastic Variational Inference", Matthew D. Hoffman, David M. Blei,
         Chong Wang, John Paisley, 2013
-    
-    [2] "Online Variational Inference for the Hierarchical Dirichlet Process", 
+
+    [2] "Online Variational Inference for the Hierarchical Dirichlet Process",
         Chong Wang, John Paisley, David M. Blei, 2011
 
     [3] Chong Wang's online-hdp code. Link:
@@ -267,9 +269,9 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
     """
 
     def __init__(self, n_topic_truncate=150, n_doc_truncate=20, omega=1.0,
-                 alpha=1.0, eta=1e-2, learning_method='online', kappa=0.5, 
+                 alpha=1.0, eta=1e-2, learning_method='online', kappa=0.5,
                  tau=10., scale=1.0, max_iter=100, total_samples=1e6,
-                 batch_size=256, evaluate_every=0, perp_tol=1e-1, 
+                 batch_size=256, evaluate_every=0, perp_tol=1e-1,
                  mean_change_tol=1e-3, max_doc_update_iter=100,
                  n_jobs=1, verbose=0, random_state=None):
         self.n_topic_truncate = int(n_topic_truncate)
@@ -330,7 +332,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         # follow reference [3]
         self.lambda_ = self.random_state_.gamma(
             1.0, 1.0, (self.n_topic_truncate, n_features)) * \
-                (n_docs * 100 / (self.n_topic_truncate * n_features))
+            (n_docs * 100 / (self.n_topic_truncate * n_features))
         self.elog_beta_ = log_dirichlet_expectation(self.lambda_)
 
         # Beta distribution for stick break process
@@ -344,11 +346,9 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         self.n_min_batch_iter_ = 1
 
     def _get_step_size(self):
-        rhot = self.scale * np.power(self.tau + self.n_min_batch_iter_, -self.kappa)
-        if rhot < 0.0: 
-            rhot = 0.0
-            # DEBUG
-            #print 'rhot become 0.0 at n_min_batch_iter_ = %d' % self.n_min_batch_iter_
+        rhot = self.scale * np.power(
+            self.tau + self.n_min_batch_iter_, -self.kappa)
+        rhot = max(rhot, 0.0)
         self.n_min_batch_iter_ += 1
         return rhot
 
@@ -368,7 +368,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                                                       cal_doc_distr)
                 for idx_slice in gen_even_slices(X.shape[0], n_jobs))
             doc_topics, sstats_list = zip(*results)
-        
+
             doc_topic_distr = np.vstack(doc_topics) if cal_doc_distr else None
             sstats = None
             if cal_sstats:
@@ -393,7 +393,6 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                                                      cal_sstats,
                                                      cal_doc_distr)
         return (doc_topic_distr, sstats)
-
 
     def _m_step(self, sstats, n_samples, online_update=False):
         n_topics = self.n_topic_truncate
@@ -470,7 +469,9 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                                      cal_sstats=True,
                                      cal_doc_distr=False,
                                      parallel=None)
-            self._m_step(sstats, n_samples=X_slice.shape[0], online_update=True)
+            self._m_step(sstats,
+                         n_samples=X_slice.shape[0],
+                         online_update=True)
         return self
 
     def fit(self, X, y=None):
@@ -492,7 +493,8 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         self._init_global_latent_vars(*X.shape)
 
         n_jobs = _get_n_jobs(self.n_jobs)
-        with Parallel(n_jobs=n_jobs, verbose=max(0, self.verbose - 1)) as parallel:
+        verbose = max(0, self.verbose - 1)
+        with Parallel(n_jobs=n_jobs, verbose=verbose) as parallel:
             for i in xrange(self.max_iter):
                 # batch update
                 _, sstats = self._e_step(X,
@@ -506,7 +508,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         """Transform data X according to the fitted model.
-        
+
         Parameters
         ----------
         X : array-like or sparse matrix, shape=(n_samples, n_features)
@@ -527,7 +529,8 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
             X, "HierarchicalDirichletProcess.transform")
 
         n_jobs = _get_n_jobs(self.n_jobs)
-        with Parallel(n_jobs=n_jobs, verbose=max(0, self.verbose - 1)) as parallel:
+        verbose = max(0, self.verbose-1)
+        with Parallel(n_jobs=n_jobs, verbose=verbose) as parallel:
             doc_topic_distr, _ = self._e_step(X,
                                               cal_sstats=False,
                                               cal_doc_distr=True,
