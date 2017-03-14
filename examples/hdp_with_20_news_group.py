@@ -8,21 +8,24 @@ Modified form scikit-learn's "Topic extraction with NMF and LDA"
 from __future__ import print_function
 from time import time
 
+import numpy as np
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.datasets import fetch_20newsgroups
 
 from bnp.online_hdp import HierarchicalDirichletProcess
 
-n_samples = 4000
+n_iter = 5
 n_features = 1000
-n_topic_truncate = 20
+n_topic_truncate = 100
 n_doc_truncate = 10
-n_top_words = 20
+n_top_words = 10
 
 
 def print_top_words(model, feature_names, n_top_words):
     topic_distr = model.topic_distribution()
-    for topic_idx, topic in enumerate(model.lambda_):
+    topic_order = np.argsort(topic_distr)[::-1]
+    for topic_idx in topic_order:
+        topic = model.lambda_[topic_idx, :]
         message = "Topic #%d (%.3f): " % (topic_idx, topic_distr[topic_idx])
         message += " ".join([feature_names[i]
                              for i in topic.argsort()[:-n_top_words - 1:-1]])
@@ -39,7 +42,7 @@ print("Loading dataset...")
 t0 = time()
 dataset = fetch_20newsgroups(shuffle=True, random_state=1,
                              remove=('headers', 'footers', 'quotes'))
-data_samples = dataset.data[:n_samples]
+data_samples = dataset.data
 print("done in %0.3fs." % (time() - t0))
 
 # Use tf (raw term count) features for HDP.
@@ -54,17 +57,20 @@ print()
 
 print("Fitting HDP models with tf features, "
       "n_samples=%d and n_features=%d..."
-      % (n_samples, n_features))
+      % (tf.shape[0], n_features))
 hdp = HierarchicalDirichletProcess(n_topic_truncate=n_topic_truncate,
                                    n_doc_truncate=n_doc_truncate,
-                                   omega=10.0,
+                                   omega=1.0,
+                                   kappa=0.9,
+                                   tau=1.,
                                    max_iter=10,
-                                   learning_method='batch',
-                                   n_jobs=4,
-                                   verbose=2,
-                                   random_state=0)
+                                   learning_method='online',
+                                   batch_size=500,
+                                   total_samples=tf.shape[0],
+                                   verbose=1,
+                                   random_state=1)
 t0 = time()
-hdp.fit(tf)
+hdp.partial_fit(tf)
 print("done in %0.3fs." % (time() - t0))
 
 print("\nTopics in HDP model:")
