@@ -106,3 +106,24 @@ def test_hdp_topic_distribution():
     hdp.fit(X)
     topic_distr = hdp.topic_distribution()
     assert_almost_equal(np.sum(topic_distr), 1.0)
+
+
+def test_partial_fit_after_fit():
+    """Test run partial_fit after fit
+
+    partial_fit should reset global parameters
+    """
+    _, X = _build_sparse_mtx()
+    params = {
+        'n_topic_truncate': 20,
+        'n_doc_truncate': 5,
+        'learning_method': 'batch',
+        'max_iter': 10,
+        'random_state': 1,
+    }
+    hdp1 = HierarchicalDirichletProcess(**params)
+    hdp1.fit(X)
+    hdp1.partial_fit(X)
+    hdp2 = HierarchicalDirichletProcess(**params)
+    hdp2.partial_fit(X)
+    assert_almost_equal(hdp1.transform(X), hdp2.transform(X))
