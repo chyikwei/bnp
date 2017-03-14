@@ -254,7 +254,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         Golbal Variational parameter for topic stick length (`v`)
         q(v_k) ~ Beta(a_[0, k], a_1[1, k])
 
-    n_min_batch_iter_ : int
+    n_mini_batch_iter_ : int
         Number of iterations of the mini-batch EM step.
 
     n_iter_ : int
@@ -298,6 +298,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         self.n_jobs = int(n_jobs)
         self.verbose = int(verbose)
         self.random_state = random_state
+        self.initialized_ = False
 
     def _check_params(self):
         """Check model parameters."""
@@ -346,15 +347,16 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         self.v_stick_ = np.array([np.ones(self.n_topic_truncate-1),
                                   np.arange(self.n_topic_truncate-1, 0, -1)])
         self.elog_stick_ = log_stick_expectation(self.v_stick_)
+        self.initialized_  = True
 
     def _init_min_batch_parameters(self):
-        self.n_min_batch_iter_ = 1
+        self.n_mini_batch_iter_ = 1
 
     def _get_step_size(self):
         rhot = self.scale * np.power(
-            self.tau + self.n_min_batch_iter_, -self.kappa)
+            self.tau + self.n_mini_batch_iter_, -self.kappa)
         rhot = max(rhot, 0.0)
-        self.n_min_batch_iter_ += 1
+        self.n_mini_batch_iter_ += 1
         return rhot
 
     def _e_step(self, X, cal_sstats, cal_doc_distr, parallel=None):
@@ -458,9 +460,10 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         n_samples, n_features = X.shape
         batch_size = self.batch_size
 
-        if not hasattr(self, "lambda_"):
-            self._init_global_latent_vars(*X.shape)
+        # reset global if no 'n_mini_batch_iter_' param
+        if not hasattr(self, 'n_mini_batch_iter_'):
             self._init_min_batch_parameters()
+            self._init_global_latent_vars(*X.shape)
 
         if n_features != self.lambda_.shape[1]:
             raise ValueError(
