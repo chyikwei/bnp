@@ -117,6 +117,8 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
         X_indices = X.indices
         X_indptr = X.indptr
 
+
+    converge_iters = []
     for idx_d in xrange(n_samples):
         # get word_id and count in each document
         if is_sparse_x:
@@ -201,7 +203,12 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
                 if converge < -0.001:
                     print("warning: likelihood decrease: %.5f -> %.5f" % old_likelihood, likelihood)
                 #print("converged iter: %d, ll: %.5f" % (n_iter, likelihood))
+                converge_iters.append(n_iter)
                 break
+            # DEBUG
+            if n_iter == (max_iters - 1):
+                print("warning: not converge in iter %d, mean_change= %.5f" % (n_iter, m_change))
+                converge_iters.append(n_iter)
             old_likelihood = likelihood
 
         # update doc topic distribution
@@ -403,12 +410,12 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
 
         # Beta distribution for stick break process
         # Note: use Beta(1, omega) as initial stick based on [1]
-        self.v_stick_ = np.array([np.ones(self.n_topic_truncate-1),
-                                  np.repeat(self.omega, self.n_topic_truncate-1)])
+        #self.v_stick_ = np.array([np.ones(self.n_topic_truncate-1),
+        #                          np.repeat(self.omega, self.n_topic_truncate-1)])
         # uniform stick
         # Note: use uniform distribution here based on [3]
-        #self.v_stick_ = np.array([np.ones(self.n_topic_truncate-1),
-        #                          np.arange(self.n_topic_truncate-1, 0, -1)])
+        self.v_stick_ = np.array([np.ones(self.n_topic_truncate-1),
+                                  np.arange(self.n_topic_truncate-1, 0, -1)])
         self.elog_v_stick_ = log_stick_expectation(self.v_stick_)
         self.sstats_v_stick_ = np.zeros(self.n_topic_truncate)
         self.initialized_  = True
