@@ -15,6 +15,7 @@ from __future__ import print_function
 
 import numpy as np
 import scipy.sparse as sp
+from scipy.special import gammaln, psi
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.utils import (check_random_state, check_array,
@@ -29,6 +30,41 @@ from .utils.expectation import (log_dirichlet_expectation,
                                 stick_expectation)
 
 EPS = np.finfo(np.float).eps
+
+
+def _local_likelihood_bound(alpha, elog_beta_d_weighted, elog_stick,
+                            gamma_d, elog_local_stick, log_phi_d,
+                            phi_d, log_zeta_d, zeta_d):
+    """local Log likelihood for 1 record
+
+    This is calulated through variational bound.
+    log(p(w|v_stick, beta)) will be greater than
+    the sum of:
+    (1) E[log(p(w|pi_d, c_d, z_d, beta))]
+    (2) E[log(p(z_d|pi_d)) - log(q(z_d|phi_d))]
+    (3) E[log(p(pi_d|alpha)) - log(q(pi_d|gamma))]
+    (4) E[log(p(c_d|v_stick) - log(q(c_d|zeta_d))]
+    """
+    likelihood = 0.0
+
+    # (1) `w_d` is mutlinomial distribution
+    likelihood += np.sum(phi_d.T * np.dot(zeta_d, elog_beta_d_weighted))
+
+    # (2) `z_d` is mutlinomial distribution
+    likelihood += np.sum((elog_local_stick - log_phi_d) * phi_d)
+
+    # (3) `pi_d` is Beta distribution
+    likelihood += (gamma_d.shape[1] * np.log(alpha))
+    gamma_d_col_sum = np.sum(gamma_d, 0)
+    dig_sum = psi(gamma_d_col_sum)
+    likelihood += np.sum((np.array([1.0, alpha])[:,np.newaxis] - gamma_d) * \
+                         (psi(gamma_d) - dig_sum))
+    likelihood += np.sum(gammaln(gamma_d))
+    likelihood -= np.sum(gammaln(gamma_d_col_sum))
+
+    # (4) `c_d` is mutlinomial distribution
+    likelihood += np.sum((elog_stick - log_zeta_d) * zeta_d)
+    return likelihood
 
 
 def mean_change(arr1, arr2):
@@ -93,29 +129,43 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
         if ids.shape[0] == 0:
             continue
 
+        # follow reference [3]
         # elog_beta_d, shape = (K, N_unique)
         elog_beta_d = elog_beta[:, ids]
         elog_beta_d_weighted = elog_beta_d * cnts
-        # exp_elog_beta_sum, shape = (K,)
-        exp_elog_beta_sum = np.exp(np.sum(elog_beta_d_weighted, axis=1)) + EPS
-        # normalize
-        exp_elog_beta_sum /= np.sum(exp_elog_beta_sum)
-        # initialize `zeta` (step 5. in ref [1]), shape = (T, K)
-        zeta_d = np.repeat(exp_elog_beta_sum[np.newaxis, :],
-                           n_doc_truncate, axis=0)
+        phi_d = np.ones((len(ids), n_doc_truncate)) / float(n_doc_truncate)
 
-        # initialize `phi` step 6 in ref [1]), shape = (N, T)
-        log_phi_d = np.dot(zeta_d, elog_beta_d).T
-        # norm_phi, shape = (N, 1)
-        norm_phi = logsumexp(log_phi_d, axis=1) + EPS
-        phi_d = np.exp(log_phi_d - norm_phi[:, np.newaxis])
-
-        # initialized gamma_d, shape = (2, T-1)
+          # initialized gamma_d, shape = (2, T-1)
         gamma_d = np.empty((2, n_doc_truncate-1))
+        elog_local_stick = np.empty((2, n_doc_truncate))
 
+        old_likelihood = -1e100
+        counter = 0
         # update variables
         for n_iter in xrange(0, max_iters):
             last_phi_d = phi_d
+
+            if n_iter < 1:
+                log_zeta_d = np.dot(phi_d.T, elog_beta_d_weighted.T)
+                norm_zeta = logsumexp(log_zeta_d, axis=1) + EPS
+                log_zeta_d = log_zeta_d - norm_zeta[:, np.newaxis]
+                zeta_d = np.exp(log_zeta_d)
+            else:
+                log_zeta_d = np.dot(phi_d.T, elog_beta_d_weighted.T) + elog_stick
+                norm_zeta = logsumexp(log_zeta_d, axis=1) + EPS
+                log_zeta_d -= norm_zeta[:, np.newaxis]
+                zeta_d = np.exp(log_zeta_d)
+
+            if n_iter < 1:
+                log_phi_d = np.dot(zeta_d, elog_beta_d).T
+                norm_phi = logsumexp(log_phi_d, axis=1) + EPS
+                log_phi_d -= norm_phi[:, np.newaxis]
+                phi_d = np.exp(log_phi_d)
+            else:
+                log_phi_d = np.dot(zeta_d, elog_beta_d).T + elog_local_stick
+                norm_phi = logsumexp(log_phi_d, axis=1) + EPS
+                log_phi_d -= norm_phi[:, np.newaxis]
+                phi_d = np.exp(log_phi_d)
 
             # phi_all, shape = (N, T)
             phi_all = phi_d * cnts[:, np.newaxis]
@@ -126,23 +176,32 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
             gamma_d[1] = alpha + np.flipud(np.cumsum(phi_cum))
             # E[log(pi_{d})], shape = (T,)
             elog_local_stick = log_stick_expectation(gamma_d)
-            # normalized zeta_d
-            log_zeta_d = np.dot(phi_d.T, elog_beta_d_weighted.T) + elog_stick
-            norm_zeta = logsumexp(log_zeta_d, axis=1) + EPS
-            zeta_d = np.exp(log_zeta_d - norm_zeta[:, np.newaxis])
-            # phi_d (step 9. in ref [1])
-            log_phi_d = np.dot(zeta_d, elog_beta_d).T + elog_local_stick
-            norm_phi = logsumexp(log_phi_d, axis=1) + EPS
-            phi_d = np.exp(log_phi_d - norm_phi[:, np.newaxis])
 
             # check convergence
             m_change = mean_change(last_phi_d, phi_d)
+
+            likelihood = _local_likelihood_bound(alpha,
+                                                 elog_beta_d_weighted,
+                                                 elog_stick,
+                                                 gamma_d,
+                                                 elog_local_stick,
+                                                 log_phi_d,
+                                                 phi_d,
+                                                 log_zeta_d,
+                                                 zeta_d)
+
+            converge = (likelihood - old_likelihood) / abs(old_likelihood)
+            if n_iter > 0:
+                print ("iter %d: likelihood: %.5f -> %.5f, mean change: %.5f" % (
+                    n_iter, old_likelihood, likelihood, m_change))
+    
+            old_likelihood = likelihood
+            if converge < -0.000001:
+                raise ValueError("likelihood decrease")
+
             if m_change < mean_change_tol:
                 # print "converged iter: %d" % (n_iter)
                 break
-            # else:
-                # DEBUG. delete later
-                # print "iter %d mean_change: %.5f" % (n_iter, m_change)
 
         # update doc topic distribution
         if cal_doc_distr:
@@ -342,11 +401,15 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         self.elog_beta_ = log_dirichlet_expectation(self.lambda_)
 
         # Beta distribution for stick break process
-        # Note: use uniform distribution here based on [3]
-        # TODO: test Beta(1., omega) later
+        # Note: use Beta(1, omega) as initial stick based on [1]
         self.v_stick_ = np.array([np.ones(self.n_topic_truncate-1),
-                                  np.arange(self.n_topic_truncate-1, 0, -1)])
-        self.elog_stick_ = log_stick_expectation(self.v_stick_)
+                                  np.repeat(self.omega, self.n_topic_truncate-1)])
+        # uniform stick
+        # Note: use uniform distribution here based on [3]
+        #self.v_stick_ = np.array([np.ones(self.n_topic_truncate-1),
+        #                          np.arange(self.n_topic_truncate-1, 0, -1)])
+        self.elog_v_stick_ = log_stick_expectation(self.v_stick_)
+        self.sstats_v_stick_ = np.zeros(self.n_topic_truncate)
         self.initialized_  = True
 
     def _init_min_batch_parameters(self):
@@ -366,7 +429,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
             results = parallel(delayed(
                 _update_local_variational_parameters)(X[idx_slice, :],
                                                       self.elog_beta_,
-                                                      self.elog_stick_,
+                                                      self.elog_v_stick_,
                                                       self.n_doc_truncate,
                                                       self.alpha,
                                                       self.max_doc_update_iter,
@@ -392,7 +455,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
             doc_topic_distr, sstats = \
                 _update_local_variational_parameters(X,
                                                      self.elog_beta_,
-                                                     self.elog_stick_,
+                                                     self.elog_v_stick_,
                                                      self.n_doc_truncate,
                                                      self.alpha,
                                                      self.max_doc_update_iter,
@@ -400,6 +463,16 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                                                      cal_sstats,
                                                      cal_doc_distr)
         return (doc_topic_distr, sstats)
+
+    def _optimal_ordering(self):
+        """ordering the topics
+
+        From ref [3]
+        """
+        labda_sum = np.sum(self.lambda_, axis=1)
+        idx = [i for i in reversed(np.argsort(labda_sum))]
+        self.lambda_ = self.lambda_[idx, :]
+        self.sstats_v_stick_ = self.sstats_v_stick_[idx]
 
     def _m_step(self, sstats, n_samples, online_update=False):
         n_topics = self.n_topic_truncate
@@ -415,24 +488,25 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
             self.lambda_ *= (1. - weight)
             self.lambda_ += sstats_lambda
 
-            # update v_stick
+            # update v_stick (based on [3])
             sstats_v_stick = sstats['v_stick']
-            sstats_v_stick *= doc_ratio
+            sstats_v_stick *= (weight * doc_ratio)
+            self.sstats_v_stick_ *= (1. - weight)
+            self.sstats_v_stick_ += sstats_v_stick
 
-            v_stick_new = np.zeros((2, n_topics - 1))
-            v_stick_new[0] += 1.
-            v_stick_new[0] += sstats_v_stick[:n_topics-1]
-            v_stick_new[1] += self.omega
+            self._optimal_ordering()
+
+            self.v_stick_[0] = self.sstats_v_stick_[:n_topics-1] + 1.
             # flip -> cumsum -> flip back
-            sum_from_end = np.flipud(np.cumsum(np.flipud(sstats_v_stick[1:])))
-            v_stick_new[1] += sum_from_end
-            v_stick_new *= weight
-            self.v_stick_ *= (1. - weight)
-            self.v_stick_ += v_stick_new
+            sum_from_end = np.flipud(
+                np.cumsum(np.flipud(self.sstats_v_stick_[1:])))
+            self.v_stick_[1] = self.omega + sum_from_end
         else:
             # batch update
             # lambda
             self.lambda_ = self.eta + sstats['lambda']
+            self.sstats_v_stick_ = sstats['v_stick']
+            self._optimal_ordering()
 
             # stick
             self.v_stick_[0] = 1. + sstats['v_stick'][:n_topics-1]
@@ -441,7 +515,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                 np.flipud(np.cumsum(np.flipud(sstats['v_stick'][1:])))
 
         self.elog_beta_ = log_dirichlet_expectation(self.lambda_)
-        self.elog_stick_ = log_stick_expectation(self.v_stick_)
+        self.elog_v_stick_ = log_stick_expectation(self.v_stick_)
 
     def partial_fit(self, X, y=None):
         """Online VB with Mini-Batch update.

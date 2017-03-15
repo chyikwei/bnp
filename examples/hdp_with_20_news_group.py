@@ -9,22 +9,25 @@ from __future__ import print_function
 from time import time
 
 import numpy as np
+from numpy.random import RandomState
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.datasets import fetch_20newsgroups
+from sklearn.utils import shuffle
 
 from bnp.online_hdp import HierarchicalDirichletProcess
 
 n_iter = 5
 n_features = 1000
-n_topic_truncate = 100
+n_topic_truncate = 50
 n_doc_truncate = 10
 n_top_words = 10
 
+rs = RandomState(100)
 
 def print_top_words(model, feature_names, n_top_words):
     topic_distr = model.topic_distribution()
     topic_order = np.argsort(topic_distr)[::-1]
-    for topic_idx in topic_order:
+    for topic_idx in xrange(model.lambda_.shape[0]):
         topic = model.lambda_[topic_idx, :]
         message = "Topic #%d (%.3f): " % (topic_idx, topic_distr[topic_idx])
         message += " ".join([feature_names[i]
@@ -61,17 +64,23 @@ print("Fitting HDP models with tf features, "
 hdp = HierarchicalDirichletProcess(n_topic_truncate=n_topic_truncate,
                                    n_doc_truncate=n_doc_truncate,
                                    omega=1.0,
+                                   alpha=1.0,
                                    kappa=0.9,
                                    tau=1.,
                                    max_iter=10,
                                    learning_method='online',
-                                   batch_size=500,
-                                   total_samples=tf.shape[0],
+                                   batch_size=250,
+                                   total_samples=tf.shape[0] * 10,
                                    verbose=1,
-                                   random_state=1)
+                                   mean_change_tol=1e-5,
+                                   random_state=0)
 t0 = time()
-hdp.partial_fit(tf)
-print("done in %0.3fs." % (time() - t0))
+
+for i in range(10):
+    print("iter %d" % i)
+    shuffle(tf, random_state=rs)
+    hdp.partial_fit(tf)
+    print("done in %0.3fs." % (time() - t0))
 
 print("\nTopics in HDP model:")
 tf_feature_names = tf_vectorizer.get_feature_names()
