@@ -72,7 +72,7 @@ hdp = HierarchicalDirichletProcess(n_topic_truncate=n_topic_truncate,
                                    batch_size=250,
                                    total_samples=tf.shape[0] * 10,
                                    verbose=1,
-                                   mean_change_tol=1e-5,
+                                   mean_change_tol=1e-3,
                                    random_state=0)
 t0 = time()
 

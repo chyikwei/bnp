@@ -74,7 +74,8 @@ def mean_change(arr1, arr2):
 def _update_local_variational_parameters(X, elog_beta, elog_stick,
                                          n_doc_truncate, alpha,
                                          max_iters, mean_change_tol,
-                                         cal_sstats, cal_doc_distr):
+                                         cal_sstats, cal_doc_distr,
+                                         burn_in_iters=3):
     """Update local variational parameter
 
     This is step 3~10 in reference [1]
@@ -145,7 +146,7 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
         for n_iter in xrange(0, max_iters):
             last_phi_d = phi_d
 
-            if n_iter < 1:
+            if n_iter < burn_in_iters:
                 log_zeta_d = np.dot(phi_d.T, elog_beta_d_weighted.T)
                 norm_zeta = logsumexp(log_zeta_d, axis=1) + EPS
                 log_zeta_d = log_zeta_d - norm_zeta[:, np.newaxis]
@@ -156,7 +157,7 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
                 log_zeta_d -= norm_zeta[:, np.newaxis]
                 zeta_d = np.exp(log_zeta_d)
 
-            if n_iter < 1:
+            if n_iter < burn_in_iters:
                 log_phi_d = np.dot(zeta_d, elog_beta_d).T
                 norm_phi = logsumexp(log_phi_d, axis=1) + EPS
                 log_phi_d -= norm_phi[:, np.newaxis]
@@ -191,17 +192,17 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
                                                  zeta_d)
 
             converge = (likelihood - old_likelihood) / abs(old_likelihood)
-            if n_iter > 0:
-                print ("iter %d: likelihood: %.5f -> %.5f, mean change: %.5f" % (
-                    n_iter, old_likelihood, likelihood, m_change))
-    
-            old_likelihood = likelihood
-            if converge < -0.000001:
-                raise ValueError("likelihood decrease")
+            #if n_iter == 0:
+            #    print("iter %d: likelihood: %.5f, mean change: %.5f" % (
+            #        n_iter, likelihood, m_change))
 
-            if m_change < mean_change_tol:
-                # print "converged iter: %d" % (n_iter)
+            if n_iter > burn_in_iters and m_change < mean_change_tol:
+                # DEBUG
+                if converge < -0.001:
+                    print("warning: likelihood decrease: %.5f -> %.5f" % old_likelihood, likelihood)
+                #print("converged iter: %d, ll: %.5f" % (n_iter, likelihood))
                 break
+            old_likelihood = likelihood
 
         # update doc topic distribution
         if cal_doc_distr:
