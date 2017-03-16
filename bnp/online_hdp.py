@@ -24,6 +24,7 @@ from sklearn.utils.validation import check_non_negative
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.extmath import logsumexp
 from sklearn.externals.joblib import Parallel, delayed
+from sklearn.externals.six.moves import xrange
 
 from .utils.expectation import (log_dirichlet_expectation,
                                 log_stick_expectation,
