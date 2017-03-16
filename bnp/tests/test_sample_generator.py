@@ -20,7 +20,7 @@ class TestSampleGenerator(unittest.TestCase):
         n_topics = self.rand.randint(100, 200)
         params = {
             'n_topics': n_topics,
-            'words_per_topic': 1, 
+            'words_per_topic': 1,
             'docs_per_topic': 1,
             'words_per_doc': 1,
             'random_state': self.rand
@@ -38,7 +38,7 @@ class TestSampleGenerator(unittest.TestCase):
 
         params = {
             'n_topics': n_topics,
-            'words_per_topic': words_per_topic, 
+            'words_per_topic': words_per_topic,
             'docs_per_topic': 1,
             'words_per_doc': words_per_doc,
             'random_state': self.rand
