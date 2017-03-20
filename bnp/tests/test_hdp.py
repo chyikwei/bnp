@@ -1,6 +1,4 @@
 import numpy as np
-from scipy.linalg import block_diag
-from scipy.sparse import csr_matrix
 from scipy.special import psi
 from sklearn.externals.six.moves import xrange
 from sklearn.exceptions import NotFittedError
@@ -8,15 +6,12 @@ from sklearn.utils.testing import (assert_almost_equal, assert_raises_regexp,
                                    assert_equal)
 
 from bnp.online_hdp import HierarchicalDirichletProcess
+from bnp.utils.sample_generator import make_uniform_doc_word_matrix
 
 
 def _build_sparse_mtx(n_topics=10):
-    # Create n_topics and each topic has 3 distinct words.
-    # (Each word only belongs to a single topic.)
-    block = np.ones((3, 3))
-    blocks = [block] * n_topics
-    X = block_diag(*blocks)
-    X = csr_matrix(X)
+    X = make_uniform_doc_word_matrix(
+        n_topics=n_topics, words_per_topic=3, docs_per_topic=3)
     return (n_topics, X)
 
 
