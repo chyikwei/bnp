@@ -120,6 +120,7 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
 
 
     converge_iters = []
+    not_converge_count = 0
     for idx_d in xrange(n_samples):
         # get word_id and count in each document
         if is_sparse_x:
@@ -144,7 +145,6 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
         elog_local_stick = np.empty((2, n_doc_truncate))
 
         old_likelihood = -1e100
-        counter = 0
         # update variables
         for n_iter in xrange(0, max_iters):
             last_phi_d = phi_d
@@ -208,8 +208,8 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
                 break
             # DEBUG
             if n_iter == (max_iters - 1):
-                print("warning: not converge in iter %d, mean_change= %.5f" % (n_iter, m_change))
-                converge_iters.append(n_iter)
+                #print("warning: not converge in iter %d, mean_change= %.5f" % (n_iter, m_change))
+                not_converge_count += 1
             old_likelihood = likelihood
 
         # update doc topic distribution
@@ -221,6 +221,10 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
         if cal_sstats:
             suff_stats['v_stick'] += np.sum(zeta_d, axis=0)
             suff_stats['lambda'][:, ids] += np.dot(zeta_d.T, phi_all.T)
+
+    print("total: %d, converged: %d, not converge: %d, max iter: %d, min iter: %d, avg iter: %.3f" % (
+            n_samples, len(converge_iters), not_converge_count, np.max(converge_iters),
+            np.min(converge_iters), np.mean(converge_iters)))
     return doc_topic_distr, suff_stats
 
 
@@ -473,15 +477,15 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                                                      cal_doc_distr)
         return (doc_topic_distr, sstats)
 
-    def _optimal_ordering(self):
-        """ordering the topics
-
-        From ref [3]
-        """
-        labda_sum = np.sum(self.lambda_, axis=1)
-        idx = [i for i in reversed(np.argsort(labda_sum))]
-        self.lambda_ = self.lambda_[idx, :]
-        self.sstats_v_stick_ = self.sstats_v_stick_[idx]
+    #def _optimal_ordering(self):
+    #    """ordering the topics
+    #
+    #    From ref [3]
+    #    """
+    #    labda_sum = np.sum(self.lambda_, axis=1)
+    #    idx = [i for i in reversed(np.argsort(labda_sum))]
+    #    self.lambda_ = self.lambda_[idx, :]
+    #    self.sstats_v_stick_ = self.sstats_v_stick_[idx]
 
     def _m_step(self, sstats, n_samples, online_update=False):
         n_topics = self.n_topic_truncate
@@ -503,7 +507,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
             self.sstats_v_stick_ *= (1. - weight)
             self.sstats_v_stick_ += sstats_v_stick
 
-            self._optimal_ordering()
+            #self._optimal_ordering()
 
             self.v_stick_[0] = self.sstats_v_stick_[:n_topics-1] + 1.
             # flip -> cumsum -> flip back
@@ -515,7 +519,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
             # lambda
             self.lambda_ = self.eta + sstats['lambda']
             self.sstats_v_stick_ = sstats['v_stick']
-            self._optimal_ordering()
+            #self._optimal_ordering()
 
             # stick
             self.v_stick_[0] = 1. + sstats['v_stick'][:n_topics-1]

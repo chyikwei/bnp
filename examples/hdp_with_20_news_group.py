@@ -21,6 +21,8 @@ n_features = 1000
 n_topic_truncate = 50
 n_doc_truncate = 10
 n_top_words = 10
+n_top_topics = 5
+n_inference_docs = 20
 
 rs = RandomState(100)
 
@@ -45,7 +47,11 @@ print("Loading dataset...")
 t0 = time()
 dataset = fetch_20newsgroups(shuffle=True, random_state=1,
                              remove=('headers', 'footers', 'quotes'))
-data_samples = dataset.data
+target_names = dataset.target_names
+train_samples = dataset.data[:-n_inference_docs]
+train_targets = dataset.target[:-n_inference_docs]
+inference_samples = dataset.data[-n_inference_docs:]
+inference_targets = dataset.target[-n_inference_docs:]
 print("done in %0.3fs." % (time() - t0))
 
 # Use tf (raw term count) features for HDP.
@@ -54,7 +60,7 @@ tf_vectorizer = CountVectorizer(max_df=0.95, min_df=2,
                                 max_features=n_features,
                                 stop_words='english')
 t0 = time()
-tf = tf_vectorizer.fit_transform(data_samples)
+tf = tf_vectorizer.fit_transform(train_samples)
 print("done in %0.3fs." % (time() - t0))
 print()
 
@@ -63,25 +69,39 @@ print("Fitting HDP models with tf features, "
       % (tf.shape[0], n_features))
 hdp = HierarchicalDirichletProcess(n_topic_truncate=n_topic_truncate,
                                    n_doc_truncate=n_doc_truncate,
-                                   omega=1.0,
+                                   omega=2.0,
                                    alpha=1.0,
-                                   kappa=0.9,
-                                   tau=1.,
+                                   kappa=0.7,
+                                   tau=64.,
                                    max_iter=10,
                                    learning_method='online',
                                    batch_size=250,
-                                   total_samples=tf.shape[0] * 5,
+                                   total_samples=1e6,
+                                   max_doc_update_iter=200,
                                    verbose=1,
                                    mean_change_tol=1e-3,
-                                   random_state=0)
+                                   random_state=100)
 
 for i in range(5):
     t0 = time()
     print("iter %d" % i)
-    shuffle(tf, random_state=rs)
-    hdp.partial_fit(tf)
+    suffled_tf = shuffle(tf, random_state=rs)
+    hdp.partial_fit(suffled_tf)
     print("done in %0.3fs." % (time() - t0))
 
 print("\nTopics in HDP model:")
 tf_feature_names = tf_vectorizer.get_feature_names()
 print_top_words(hdp, tf_feature_names, n_top_words)
+
+# top topics in each group
+print("\nTop topics in each group:")
+train_topics = hdp.transform(tf)
+# normalize
+train_topics =  train_topics / np.sum(train_topics, axis=1)[:, np.newaxis]
+for grp_idx, group_name in enumerate(target_names):
+    doc_idx = np.where(train_targets == grp_idx)[0]
+    mean_doc_topics = np.mean(train_topics[doc_idx, :], axis=0)
+    top_idx = mean_doc_topics.argsort()[:-n_top_topics - 1:-1]
+    print("group: %s:" % group_name)
+    print("top topics: %s" % (", ".join(["#%d (%.3f)" % (idx, mean_doc_topics[idx]) for idx in top_idx])))
+    print()
