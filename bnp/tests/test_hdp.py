@@ -13,7 +13,7 @@ from bnp.online_hdp import HierarchicalDirichletProcess
 def _build_sparse_mtx(n_topics=10):
     # Create n_topics and each topic has 3 distinct words.
     # (Each word only belongs to a single topic.)
-    block = n_topics * np.ones((3, 3))
+    block = np.ones((3, 3))
     blocks = [block] * n_topics
     X = block_diag(*blocks)
     X = csr_matrix(X)
@@ -127,3 +127,27 @@ def test_partial_fit_after_fit():
     hdp2 = HierarchicalDirichletProcess(**params)
     hdp2.partial_fit(X)
     assert_almost_equal(hdp1.transform(X), hdp2.transform(X))
+
+
+def test_enable_likelihood():
+    """Test enable doc_likelihood check
+
+    The result should be the same no matter it
+    is True or False.
+    """
+    _, X = _build_sparse_mtx()
+    params = {
+        'n_topic_truncate': 20,
+        'n_doc_truncate': 5,
+        'learning_method': 'batch',
+        'max_iter': 10,
+        'random_state': 1,
+        'check_doc_likelihood': True
+    }
+    hdp1 = HierarchicalDirichletProcess(**params)
+    ret1 = hdp1.fit_transform(X)
+
+    params['check_doc_likelihood'] = False
+    hdp2 = HierarchicalDirichletProcess(**params)
+    ret2 = hdp2.fit_transform(X)
+    assert_almost_equal(ret1, ret2)

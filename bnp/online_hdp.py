@@ -58,7 +58,7 @@ def _local_likelihood_bound(alpha, elog_beta_d_weighted, elog_stick,
     likelihood += (gamma_d.shape[1] * np.log(alpha))
     gamma_d_col_sum = np.sum(gamma_d, 0)
     dig_sum = psi(gamma_d_col_sum)
-    likelihood += np.sum((np.array([1.0, alpha])[:,np.newaxis] - gamma_d) * \
+    likelihood += np.sum((np.array([1.0, alpha])[:, np.newaxis] - gamma_d) * \
                          (psi(gamma_d) - dig_sum))
     likelihood += np.sum(gammaln(gamma_d))
     likelihood -= np.sum(gammaln(gamma_d_col_sum))
@@ -76,7 +76,8 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
                                          n_doc_truncate, alpha,
                                          max_iters, mean_change_tol,
                                          cal_sstats, cal_doc_distr,
-                                         burn_in_iters=3):
+                                         burn_in_iters=3,
+                                         check_doc_likelihood=False):
     """Update local variational parameter
 
     This is step 3~10 in reference [1]
@@ -118,9 +119,6 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
         X_indices = X.indices
         X_indptr = X.indptr
 
-
-    converge_iters = []
-    not_converge_count = 0
     for idx_d in xrange(n_samples):
         # get word_id and count in each document
         if is_sparse_x:
@@ -142,7 +140,7 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
 
           # initialized gamma_d, shape = (2, T-1)
         gamma_d = np.empty((2, n_doc_truncate-1))
-        elog_local_stick = np.empty((2, n_doc_truncate))
+        elog_local_stick = np.empty(n_doc_truncate)
 
         old_likelihood = -1e100
         # update variables
@@ -184,34 +182,34 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
             # check convergence
             m_change = mean_change(last_phi_d, phi_d)
 
-            likelihood = _local_likelihood_bound(alpha,
-                                                 elog_beta_d_weighted,
-                                                 elog_stick,
-                                                 gamma_d,
-                                                 elog_local_stick,
-                                                 log_phi_d,
-                                                 phi_d,
-                                                 log_zeta_d,
-                                                 zeta_d)
+            if check_doc_likelihood and n_iter >= burn_in_iters:
+                likelihood = _local_likelihood_bound(alpha,
+                                                     elog_beta_d_weighted,
+                                                     elog_stick,
+                                                     gamma_d,
+                                                     elog_local_stick,
+                                                     log_phi_d,
+                                                     phi_d,
+                                                     log_zeta_d,
+                                                     zeta_d)
 
-            converge = (likelihood - old_likelihood) / abs(old_likelihood)
+                converge = (likelihood - old_likelihood) / abs(old_likelihood)
+                if converge < -0.001:
+                    print("warning: likelihood decrease: %.5f -> %.5f" % old_likelihood, likelihood)
+                old_likelihood = likelihood
+
             #if n_iter == 0:
             #    print("iter %d: likelihood: %.5f, mean change: %.5f" % (
             #        n_iter, likelihood, m_change))
 
             if n_iter > burn_in_iters and m_change < mean_change_tol:
                 # DEBUG
-                if converge < -0.001:
-                    print("warning: likelihood decrease: %.5f -> %.5f" % old_likelihood, likelihood)
                 #print("converged iter: %d, ll: %.5f" % (n_iter, likelihood))
-                converge_iters.append(n_iter)
                 break
             # DEBUG
-            if n_iter == (max_iters - 1):
+            #if n_iter == (max_iters - 1):
                 #print("warning: not converge in iter %d, mean_change= %.5f" % (n_iter, m_change))
-                not_converge_count += 1
-            old_likelihood = likelihood
-
+            
         # update doc topic distribution
         if cal_doc_distr:
             # doc_topics, shape = (K,)
@@ -221,10 +219,6 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
         if cal_sstats:
             suff_stats['v_stick'] += np.sum(zeta_d, axis=0)
             suff_stats['lambda'][:, ids] += np.dot(zeta_d.T, phi_all.T)
-
-    print("total: %d, converged: %d, not converge: %d, max iter: %d, min iter: %d, avg iter: %.3f" % (
-            n_samples, len(converge_iters), not_converge_count, np.max(converge_iters),
-            np.min(converge_iters), np.mean(converge_iters)))
     return doc_topic_distr, suff_stats
 
 
@@ -304,6 +298,11 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         Max number of iterations for updating document topic distribution in
         the E-step.
 
+    check_doc_likelihood : boolean, optional (default=False)
+        Make sure doc log likelihood is increasing during e-step.
+        Warnings will be printed if likelihood decreases. Also, this will
+        significantly increase the training time.
+
     n_jobs : int, optional (default=1)
         The number of jobs to use in the E-step. If -1, all CPUs are used. For
         ``n_jobs`` below -1, (n_cpus + 1 + n_jobs) are used. Only used in
@@ -350,7 +349,8 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                  tau=10., scale=1.0, max_iter=100, total_samples=1e6,
                  batch_size=256, evaluate_every=0, perp_tol=1e-1,
                  mean_change_tol=1e-3, max_doc_update_iter=100,
-                 n_jobs=1, verbose=0, random_state=None):
+                 check_doc_likelihood=False, n_jobs=1, verbose=0,
+                 random_state=None):
         self.n_topic_truncate = int(n_topic_truncate)
         self.n_doc_truncate = int(n_doc_truncate)
         self.omega = float(omega)
@@ -367,6 +367,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         self.perp_tol = float(perp_tol)
         self.mean_change_tol = float(mean_change_tol)
         self.max_doc_update_iter = int(max_doc_update_iter)
+        self.check_doc_likelihood = check_doc_likelihood
         self.n_jobs = int(n_jobs)
         self.verbose = int(verbose)
         self.random_state = random_state
@@ -448,7 +449,9 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                                                       self.max_doc_update_iter,
                                                       self.mean_change_tol,
                                                       cal_sstats,
-                                                      cal_doc_distr)
+                                                      cal_doc_distr,
+                                                      check_doc_likelihood=\
+                                                      self.check_doc_likelihood)
                 for idx_slice in gen_even_slices(X.shape[0], n_jobs))
             doc_topics, sstats_list = zip(*results)
 
