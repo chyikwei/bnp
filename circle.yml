@@ -1,0 +1,14 @@
+machine:
+  post:
+    - pyenv global 2.7.12
+
+test:
+  pre:
+    - pip install coverage
+    - pip install coveralls
+
+  override:
+    - tox
+
+  post:
+    - coveralls
