@@ -6,8 +6,8 @@ from sklearn.utils.testing import (assert_almost_equal, assert_raises_regexp,
                                    assert_equal, assert_true)
 from sklearn.utils import shuffle
 
-from bnp.online_hdp import HierarchicalDirichletProcess
-from bnp.utils.sample_generator import make_doc_word_matrix, make_uniform_doc_word_matrix
+from bnp import HierarchicalDirichletProcess
+from bnp.utils import make_doc_word_matrix, make_uniform_doc_word_matrix
 
 
 def _hdp_topic_check(hdp_model, n_topics, words_per_topic,

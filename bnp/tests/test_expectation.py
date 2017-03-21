@@ -5,9 +5,9 @@ from numpy.random import RandomState
 from scipy.special import psi
 
 from sklearn.utils.testing import assert_almost_equal, assert_equal
-from bnp.utils.expectation import (log_dirichlet_expectation,
-                                   log_stick_expectation,
-                                   stick_expectation)
+from bnp.utils import (log_dirichlet_expectation,
+                       log_stick_expectation,
+                       stick_expectation)
 
 
 class TestDirichletExpectation(unittest.TestCase):

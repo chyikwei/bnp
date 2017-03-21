@@ -1,10 +1,17 @@
+"""HDP on simple synthetic data
+
+This is an simple example to show HDP can find
+hidden topics from doc-word matrix.
+"""
+
+# Author: Chyi-Kwei Yau <chyikwei.yau@gmail.com>
+
 from __future__ import print_function
 
-import numpy as np
 from numpy.random import RandomState
 
-from bnp.online_hdp import HierarchicalDirichletProcess
-from bnp.utils.sample_generator import make_doc_word_matrix
+from bnp import HierarchicalDirichletProcess
+from bnp.utils import make_doc_word_matrix
 
 n_iter = 5
 n_topic_truncate = 10
@@ -37,6 +44,7 @@ hdp = HierarchicalDirichletProcess(n_topic_truncate=n_topic_truncate,
                                    omega=2.0,
                                    alpha=1.0,
                                    max_iter=5,
+                                   verbose=1,
                                    max_doc_update_iter=200,
                                    random_state=100)
 

@@ -4,8 +4,7 @@ import numpy as np
 from numpy.random import RandomState
 from sklearn.utils.testing import assert_equal, assert_array_equal, assert_true, assert_less
 
-from bnp.utils.sample_generator import (make_doc_word_matrix,
-                                        make_uniform_doc_word_matrix)
+from bnp.utils import make_doc_word_matrix, make_uniform_doc_word_matrix
 
 
 class TestSampleGenerator(unittest.TestCase):

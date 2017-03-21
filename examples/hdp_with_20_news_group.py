@@ -14,7 +14,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.utils import shuffle
 
-from bnp.online_hdp import HierarchicalDirichletProcess
+from bnp import HierarchicalDirichletProcess
 
 n_iter = 5
 n_features = 1000
@@ -28,8 +28,7 @@ rs = RandomState(100)
 
 def print_top_words(model, feature_names, n_top_words):
     topic_distr = model.topic_distribution()
-    topic_order = np.argsort(topic_distr)[::-1]
-    for topic_idx in xrange(model.lambda_.shape[0]):
+    for topic_idx in range(model.lambda_.shape[0]):
         topic = model.lambda_[topic_idx, :]
         message = "Topic #%d (%.3f): " % (topic_idx, topic_distr[topic_idx])
         message += " ".join([feature_names[i]

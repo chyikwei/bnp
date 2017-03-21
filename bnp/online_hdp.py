@@ -26,9 +26,9 @@ from sklearn.utils.extmath import logsumexp
 from sklearn.externals.joblib import Parallel, delayed
 from sklearn.externals.six.moves import xrange
 
-from .utils.expectation import (log_dirichlet_expectation,
-                                log_stick_expectation,
-                                stick_expectation)
+from .utils import (log_dirichlet_expectation,
+                    log_stick_expectation,
+                    stick_expectation)
 
 EPS = np.finfo(np.float).eps
 
