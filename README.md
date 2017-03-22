@@ -58,6 +58,11 @@ matrix([[0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 4, 3,
          0, 0, 0, 0, 0, 0]])
 
 # fit model
+>>> hdp = HierarchicalDirichletProcess(n_topic_truncate=10,
+...                                    n_doc_truncate=5,
+...                                    max_iter=5,
+...                                    verbose=1,
+...                                    random_state=rs)
 >>> hdp.fit(tf)
 iteration: 1
 iteration: 2
@@ -89,4 +94,21 @@ Topic 6 (proportion: 0.20): 5 8 1 2 4 3 6 9 7 0
 Topic 7 (proportion: 0.20): 15 14 17 19 10 18 13 12 16 11
 Topic 8 (proportion: 0.00): 43 49 48 44 41 47 45 40 42 46
 Topic 9 (proportion: 0.09): 38 33 35 36 32 31 37 30 34 39
+```
+
+Examples
+--------
+In `bnp/examples` folder. (Will add ipython notebook soon)
+
+
+Running Test:
+-------------
+```
+python setup.py test
+```
+
+Uninstall:
+----------
+```
+pip uninstall bnp
 ```
