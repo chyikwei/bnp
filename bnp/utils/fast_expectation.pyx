@@ -10,7 +10,7 @@ from numpy.math cimport EULER
 
 @cython.boundscheck(False)
 @cython.wraparound(False)
-def log_stick_expectation(np.ndarray[ndim=2, dtype=np.float64_t] sticks):
+def log_stick_expectation(np.ndarray[ndim=2, dtype=np.float64_t, mode="c"] sticks):
     """Expectation of log stick-breaking process
 
     Parameters

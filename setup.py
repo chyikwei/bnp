@@ -1,4 +1,4 @@
-#from distutils.core import setup
+import os
 from setuptools import setup
 from distutils.extension import Extension
 from Cython.Build import cythonize
@@ -7,11 +7,19 @@ from Cython.Distutils import build_ext
 import numpy
 import bnp
 
+libraries = []
+if os.name == 'posix':
+    libraries.append('m')
+
 extensions = [
     Extension("bnp.utils.fast_expectation",
               ["bnp/utils/fast_expectation.pyx"],
               include_dirs=[numpy.get_include()],
-              libraries=["m"]),
+              libraries=libraries),
+    Extension("bnp.utils.extmath",
+              ["bnp/utils/extmath.pyx"],
+              include_dirs=[numpy.get_include()],
+              libraries=libraries),
 ]
 
 setup(
@@ -31,5 +39,5 @@ setup(
     packages=['bnp', 'bnp.utils'],
     author='Chyi-Kwei Yau',
     author_email='chyikwei.yau@gmail.com',
-    description='Bayesian Nonparametric model implementation with Python'
+    description='Bayesian Nonparametric models with Python'
 )

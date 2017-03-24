@@ -22,13 +22,14 @@ from sklearn.utils import (check_random_state, check_array,
                            gen_batches, gen_even_slices, _get_n_jobs)
 from sklearn.utils.validation import check_non_negative
 from sklearn.exceptions import NotFittedError
-from sklearn.utils.extmath import logsumexp
+#from sklearn.utils.extmath import logsumexp
 from sklearn.externals.joblib import Parallel, delayed
 from sklearn.externals.six.moves import xrange
 
 from .utils import (log_dirichlet_expectation,
                     log_stick_expectation,
                     stick_expectation)
+from .utils.extmath import row_log_normalize_exp
 
 EPS = np.finfo(np.float).eps
 
@@ -149,24 +150,24 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
 
             if n_iter < burn_in_iters:
                 log_zeta_d = np.dot(phi_d.T, elog_beta_d_weighted.T)
-                norm_zeta = logsumexp(log_zeta_d, axis=1) + EPS
-                log_zeta_d = log_zeta_d - norm_zeta[:, np.newaxis]
+                log_zeta_d = log_zeta_d.copy(order='C')
+                row_log_normalize_exp(log_zeta_d)
                 zeta_d = np.exp(log_zeta_d)
             else:
                 log_zeta_d = np.dot(phi_d.T, elog_beta_d_weighted.T) + elog_stick
-                norm_zeta = logsumexp(log_zeta_d, axis=1) + EPS
-                log_zeta_d -= norm_zeta[:, np.newaxis]
+                log_zeta_d = log_zeta_d.copy(order='C')
+                row_log_normalize_exp(log_zeta_d)
                 zeta_d = np.exp(log_zeta_d)
 
             if n_iter < burn_in_iters:
                 log_phi_d = np.dot(zeta_d, elog_beta_d).T
-                norm_phi = logsumexp(log_phi_d, axis=1) + EPS
-                log_phi_d -= norm_phi[:, np.newaxis]
+                log_phi_d = log_phi_d.copy(order='C')
+                row_log_normalize_exp(log_phi_d)
                 phi_d = np.exp(log_phi_d)
             else:
                 log_phi_d = np.dot(zeta_d, elog_beta_d).T + elog_local_stick
-                norm_phi = logsumexp(log_phi_d, axis=1) + EPS
-                log_phi_d -= norm_phi[:, np.newaxis]
+                log_phi_d = log_phi_d.copy(order='C')
+                row_log_normalize_exp(log_phi_d)
                 phi_d = np.exp(log_phi_d)
 
             # phi_all, shape = (N, T)
