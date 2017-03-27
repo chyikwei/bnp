@@ -14,7 +14,7 @@ from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.datasets import fetch_20newsgroups
 from sklearn.utils import shuffle
 
-from bnp import HierarchicalDirichletProcess
+from bnp.online_hdp import HierarchicalDirichletProcess
 
 n_iter = 5
 n_features = 1000

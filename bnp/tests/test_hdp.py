@@ -6,7 +6,7 @@ from sklearn.utils.testing import (assert_almost_equal, assert_raises_regexp,
                                    assert_equal, assert_true)
 from sklearn.utils import shuffle
 
-from bnp import HierarchicalDirichletProcess
+from bnp.online_hdp import HierarchicalDirichletProcess
 from bnp.utils import make_doc_word_matrix, make_uniform_doc_word_matrix
 
 

@@ -10,7 +10,7 @@ from __future__ import print_function
 
 from numpy.random import RandomState
 
-from bnp import HierarchicalDirichletProcess
+from bnp.online_hdp import HierarchicalDirichletProcess
 from bnp.utils import make_doc_word_matrix
 
 n_iter = 5

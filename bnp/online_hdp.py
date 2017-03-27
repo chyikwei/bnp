@@ -22,13 +22,15 @@ from sklearn.utils import (check_random_state, check_array,
                            gen_batches, gen_even_slices, _get_n_jobs)
 from sklearn.utils.validation import check_non_negative
 from sklearn.exceptions import NotFittedError
-from sklearn.utils.extmath import logsumexp
+#from sklearn.utils.extmath import logsumexp
 from sklearn.externals.joblib import Parallel, delayed
 from sklearn.externals.six.moves import xrange
 
 from .utils import (log_dirichlet_expectation,
                     log_stick_expectation,
                     stick_expectation)
+from .utils.extmath import (row_log_normalize_exp, mean_change_2d,
+                            beta_param_update)
 
 EPS = np.finfo(np.float).eps
 
@@ -66,10 +68,6 @@ def _local_likelihood_bound(alpha, elog_beta_d_weighted, elog_stick,
     # (4) `c_d` is mutlinomial distribution
     likelihood += np.sum((elog_stick - log_zeta_d) * zeta_d)
     return likelihood
-
-
-def mean_change(arr1, arr2):
-    return np.abs(arr1 - arr2).mean()
 
 
 def _update_local_variational_parameters(X, elog_beta, elog_stick,
@@ -149,38 +147,36 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
 
             if n_iter < burn_in_iters:
                 log_zeta_d = np.dot(phi_d.T, elog_beta_d_weighted.T)
-                norm_zeta = logsumexp(log_zeta_d, axis=1) + EPS
-                log_zeta_d = log_zeta_d - norm_zeta[:, np.newaxis]
+                log_zeta_d = np.ascontiguousarray(log_zeta_d)
+                row_log_normalize_exp(log_zeta_d)
                 zeta_d = np.exp(log_zeta_d)
             else:
                 log_zeta_d = np.dot(phi_d.T, elog_beta_d_weighted.T) + elog_stick
-                norm_zeta = logsumexp(log_zeta_d, axis=1) + EPS
-                log_zeta_d -= norm_zeta[:, np.newaxis]
+                log_zeta_d = np.ascontiguousarray(log_zeta_d)
+                row_log_normalize_exp(log_zeta_d)
                 zeta_d = np.exp(log_zeta_d)
 
             if n_iter < burn_in_iters:
                 log_phi_d = np.dot(zeta_d, elog_beta_d).T
-                norm_phi = logsumexp(log_phi_d, axis=1) + EPS
-                log_phi_d -= norm_phi[:, np.newaxis]
+                log_phi_d = np.ascontiguousarray(log_phi_d)
+                row_log_normalize_exp(log_phi_d)
                 phi_d = np.exp(log_phi_d)
             else:
                 log_phi_d = np.dot(zeta_d, elog_beta_d).T + elog_local_stick
-                norm_phi = logsumexp(log_phi_d, axis=1) + EPS
-                log_phi_d -= norm_phi[:, np.newaxis]
+                log_phi_d = np.ascontiguousarray(log_phi_d)
+                row_log_normalize_exp(log_phi_d)
                 phi_d = np.exp(log_phi_d)
 
             # phi_all, shape = (N, T)
             phi_all = phi_d * cnts[:, np.newaxis]
             # update gamma_d, zeta_d (step 8. in ref [1])
-            # gamma_d
-            gamma_d[0] = 1.0 + np.sum(phi_all[:, :n_doc_truncate-1], 0)
-            phi_cum = np.flipud(np.sum(phi_all[:, 1:], 0))
-            gamma_d[1] = alpha + np.flipud(np.cumsum(phi_cum))
+            phi_row_sum = np.sum(phi_all, axis=0)
+            beta_param_update(alpha, phi_row_sum, gamma_d)
             # E[log(pi_{d})], shape = (T,)
             elog_local_stick = log_stick_expectation(gamma_d)
 
             # check convergence
-            m_change = mean_change(last_phi_d, phi_d)
+            m_change = mean_change_2d(last_phi_d, phi_d)
 
             if check_doc_likelihood and n_iter >= burn_in_iters:
                 likelihood = _local_likelihood_bound(alpha,
@@ -213,7 +209,7 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
         # update doc topic distribution
         if cal_doc_distr:
             # doc_topics, shape = (K,)
-            doc_topic_distr[idx_d, :] = np.dot(np.sum(phi_all, axis=0), zeta_d)
+            doc_topic_distr[idx_d, :] = np.dot(phi_row_sum, zeta_d)
 
         # update sstats
         if cal_sstats:

@@ -117,3 +117,15 @@ class TestSampleGenerator(unittest.TestCase):
         assert_equal(dense.shape[1], n_topics * words_per_topic)
         row_sum = np.sum(dense, axis=1)
         assert_array_equal(row_sum, np.repeat(words_per_topic, n_topics * docs_per_topic))
+
+    def test_random_state(self):
+        params = {
+            'n_topics': 10,
+            'words_per_topic': 20,
+            'docs_per_topic': 1,
+            'words_per_doc': 100,
+            'random_state': 0
+        }
+        matrix_1 = make_doc_word_matrix(**params)
+        matrix_2 = make_doc_word_matrix(**params)
+        assert_array_equal(matrix_1.toarray(), matrix_2.toarray())
