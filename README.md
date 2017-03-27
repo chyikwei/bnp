@@ -26,7 +26,7 @@ Install:
 git clone git@github.com:chyikwei/bnp.git
 cd bnp
 
-# install dependencies (numpy, scipy, scikit-learn)
+# install dependencies (cython, numpy, scipy, scikit-learn)
 pip install -r requirements.txt
 pip install .
 ```
