@@ -170,9 +170,10 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
             phi_all = phi_d * cnts[:, np.newaxis]
             # update gamma_d, zeta_d (step 8. in ref [1])
             # gamma_d
-            gamma_d[0] = 1.0 + np.sum(phi_all[:, :n_doc_truncate-1], 0)
-            phi_cum = np.flipud(np.sum(phi_all[:, 1:], 0))
-            gamma_d[1] = alpha + np.flipud(np.cumsum(phi_cum))
+            phi_row_sum = np.sum(phi_all, axis=0)
+            gamma_d[0] = 1.0 + phi_row_sum[:n_doc_truncate-1]
+            phi_flip = np.flipud(phi_row_sum[1:])
+            gamma_d[1] = alpha + np.flipud(np.cumsum(phi_flip))
             # E[log(pi_{d})], shape = (T,)
             elog_local_stick = log_stick_expectation(gamma_d)
 
@@ -210,7 +211,7 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
         # update doc topic distribution
         if cal_doc_distr:
             # doc_topics, shape = (K,)
-            doc_topic_distr[idx_d, :] = np.dot(np.sum(phi_all, axis=0), zeta_d)
+            doc_topic_distr[idx_d, :] = np.dot(phi_row_sum, zeta_d)
 
         # update sstats
         if cal_sstats:

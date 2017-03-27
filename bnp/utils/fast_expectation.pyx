@@ -36,10 +36,10 @@ def log_stick_expectation(np.ndarray[ndim=2, dtype=np.float64_t, mode="c"] stick
 
     cum_elog_1_v = 0.
     for i in range(n_cols):
-        col_sum = psi(sticks[0][i] + sticks[1][i])
-        elogsticks[i] = (psi(sticks[0][i]) - col_sum)
+        col_sum = psi(sticks[0, i] + sticks[1, i])
+        elogsticks[i] = (psi(sticks[0, i]) - col_sum)
         elogsticks[i] += cum_elog_1_v
-        cum_elog_1_v += (psi(sticks[1][i]) - col_sum)
+        cum_elog_1_v += (psi(sticks[1, i]) - col_sum)
     elogsticks[n_cols] = cum_elog_1_v
     return elogsticks
 
