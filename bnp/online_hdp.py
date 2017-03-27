@@ -29,7 +29,8 @@ from sklearn.externals.six.moves import xrange
 from .utils import (log_dirichlet_expectation,
                     log_stick_expectation,
                     stick_expectation)
-from .utils.extmath import row_log_normalize_exp, mean_change_2d
+from .utils.extmath import (row_log_normalize_exp, mean_change_2d,
+                            beta_param_update)
 
 EPS = np.finfo(np.float).eps
 
@@ -169,11 +170,8 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
             # phi_all, shape = (N, T)
             phi_all = phi_d * cnts[:, np.newaxis]
             # update gamma_d, zeta_d (step 8. in ref [1])
-            # gamma_d
             phi_row_sum = np.sum(phi_all, axis=0)
-            gamma_d[0] = 1.0 + phi_row_sum[:n_doc_truncate-1]
-            phi_flip = np.flipud(phi_row_sum[1:])
-            gamma_d[1] = alpha + np.flipud(np.cumsum(phi_flip))
+            beta_param_update(alpha, phi_row_sum, gamma_d)
             # E[log(pi_{d})], shape = (T,)
             elog_local_stick = log_stick_expectation(gamma_d)
 

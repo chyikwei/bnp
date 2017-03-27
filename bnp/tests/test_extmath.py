@@ -5,7 +5,8 @@ from numpy.random import RandomState
 from sklearn.utils.testing import assert_almost_equal
 from sklearn.utils.extmath import logsumexp
 
-from bnp.utils.extmath import row_log_normalize_exp, mean_change_2d
+from bnp.utils.extmath import (row_log_normalize_exp,
+                               mean_change_2d, beta_param_update)
 
 
 class TestExtMathUtils(unittest.TestCase):
@@ -28,3 +29,17 @@ class TestExtMathUtils(unittest.TestCase):
         ret1 = mean_change_2d(arr1, arr2)
         ret2 = np.abs(arr1 - arr2).mean()
         assert_almost_equal(ret1, ret2)
+
+    def test_beta_param_update(self):
+        alpha = self.rand.rand() * 10
+        n_cols = self.rand.randint(100, 200)
+        row_stats = self.rand.random_sample(n_cols)
+
+        # in-place update
+        arr1 = np.empty((2, n_cols - 1))
+        beta_param_update(alpha, row_stats, arr1)
+        # expect output
+        arr2 = np.empty((2, n_cols - 1))
+        arr2[0] = 1.0 + row_stats[:n_cols-1]
+        arr2[1] = alpha + np.flipud(np.cumsum(np.flipud(row_stats[1:])))
+        assert_almost_equal(arr1, arr2)

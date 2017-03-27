@@ -67,3 +67,39 @@ def mean_change_2d(np.ndarray[ndim=2, dtype=np.float64_t] arr_1,
             total += diff
 
     return total / (n_rows * n_cols)
+
+
+@cython.boundscheck(False)
+@cython.wraparound(False)
+@cython.nonecheck(False)
+def beta_param_update(double alpha,
+                   np.ndarray[ndim=1, dtype=np.float64_t] row_stats,
+                   np.ndarray[ndim=2, dtype=np.float64_t, mode="c"] out):
+    """In-place update beta distribution params
+
+    Equivalent to:
+        T = row_stats.shape[0]
+        # out.shape = (2, T-1)
+        out[0] = 1.0 + row_stats[:T-1]
+        out[1] = alpha + np.flipud(np.cumsum(np.flipud(row_stats[1:])))
+    """
+    cdef np.float64_t temp_sum
+    cdef np.npy_intp i, j, n_cols
+
+    n_cols = row_stats.shape[0]
+
+    if out.shape[0] != 2:
+        raise ValueError("out.shape[0] != 2")
+
+    if out.shape[1] != (n_cols - 1):
+        raise ValueError("row_stats and out shape mismatch")
+
+    # param 0: 1 + sum(row sum of sstats)
+    for i in range(n_cols - 1):
+        out[0, i] = 1. + row_stats[i]
+
+    # reverse sum
+    temp_sum = 0.0
+    for i from n_cols > i > 0:
+        temp_sum += row_stats[i]
+        out[1, i-1] = alpha + temp_sum
