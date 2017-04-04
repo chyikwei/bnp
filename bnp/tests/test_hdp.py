@@ -56,6 +56,7 @@ def test_hdp_dense_input():
     X = make_uniform_doc_word_matrix(
         n_topics=10, words_per_topic=3, docs_per_topic=3)
     dense_X = X.todense()
+    array_X = X.toarray()
 
     params = {
         'n_topic_truncate': 20,
@@ -68,8 +69,13 @@ def test_hdp_dense_input():
     transformed_1 = hdp1.fit_transform(dense_X)
 
     hdp2 = HierarchicalDirichletProcess(**params)
-    transformed_2 = hdp2.fit_transform(X)
+    transformed_2 = hdp2.fit_transform(array_X)
+
+    hdp3 = HierarchicalDirichletProcess(**params)
+    transformed_3 = hdp3.fit_transform(X)
+
     assert_almost_equal(transformed_1, transformed_2)
+    assert_almost_equal(transformed_2, transformed_3)
 
 
 def test_hdp_transform():
