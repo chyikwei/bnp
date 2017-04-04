@@ -223,12 +223,12 @@ def test_hdp_partial_fit_with_fake_data():
 def test_hdp_score():
     """Test HDP score function
     """
-    n_topics = 10
-    n_topic_truncate = 3
+    n_topics = 3
+    n_topic_truncate = 10
     words_per_topic = 10
     tf = make_doc_word_matrix(n_topics=n_topics,
                               words_per_topic=words_per_topic,
-                              docs_per_topic=100,
+                              docs_per_topic=50,
                               words_per_doc=50,
                               shuffle=True,
                               random_state=0)

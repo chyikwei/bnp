@@ -122,8 +122,9 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
             ids = X_indices[X_indptr[idx_d]:X_indptr[idx_d + 1]]
             cnts = X_data[X_indptr[idx_d]:X_indptr[idx_d + 1]]
         else:
-            ids = np.nonzero(X[idx_d, :])[0]
-            cnts = X[idx_d, ids]
+            X_d = np.ravel(X[idx_d, :])
+            ids = np.nonzero(X_d)[0]
+            cnts = X_d[ids]
 
         # check if doc is empty
         if ids.shape[0] == 0:
@@ -409,6 +410,25 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         check_non_negative(X, whom)
         return X
 
+    def _check_inference(self, X, whom):
+        """Check inference conditions
+
+        The function will check model is fitted and input matrix
+        has correct shape & value
+        """
+        if not hasattr(self, "lambda_"):
+            raise NotFittedError("no 'lambda_' attribute in model."
+                                 " Please fit model first.")
+
+        self._check_non_neg_array(X, whom)
+
+        n_features = X.shape[1]
+        if n_features != self.lambda_.shape[1]:
+            raise ValueError(
+                "The provided data has %d dimensions while "
+                "the model was trained with feature size %d." %
+                (n_features, self.lambda_.shape[1]))
+
     def _init_global_latent_vars(self, n_docs, n_features):
         """Initialize latent variables."""
 
@@ -638,12 +658,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
             Unnormalized document topic distribution for X.
 
         """
-        if not hasattr(self, "lambda_"):
-            raise NotFittedError("no 'lambda_' attribute in model."
-                                 " Please fit model first.")
-
-        X = self._check_non_neg_array(
-            X, "HierarchicalDirichletProcess.transform")
+        self._check_inference(X, "HierarchicalDirichletProcess.transform")
 
         n_jobs = _get_n_jobs(self.n_jobs)
         verbose = max(0, self.verbose-1)
@@ -670,8 +685,8 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         topic_distr = stick_expectation(self.v_stick_)
         return topic_distr
 
-    def score(self, X, y=None):
-        """Calculate approximate document log-likelihood as score.
+    def _approximate_bound(self, X):
+        """Calculate approximate log-likelihood for the model
 
         Parameters
         ----------
@@ -680,11 +695,10 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
 
         Returns
         -------
-        score : float
-            Use approximate bound as score.
+        likelihood : float
+            approximate log-likelihood for variational parameters
         """
         likelihood = 0.0
-
         # calculate doc likelihood
         n_jobs = _get_n_jobs(self.n_jobs)
         verbose = max(0, self.verbose-1)
@@ -716,3 +730,20 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         likelihood += np.sum(gammaln(v_k))
         likelihood -= np.sum(gammaln(v_k_col_sum))
         return likelihood
+
+    def score(self, X, y=None):
+        """Calculate approximate log-likelihood as score.
+
+        Parameters
+        ----------
+        X : array-like or sparse matrix, shape=(n_samples, n_features)
+            Document word matrix.
+
+        Returns
+        -------
+        score : float
+            Use approximate bound as score.
+        """
+
+        self._check_inference(X, "HierarchicalDirichletProcess.score")
+        return self._approximate_bound(X)
