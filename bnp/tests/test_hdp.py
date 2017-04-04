@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.externals.six.moves import xrange
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.testing import (assert_almost_equal, assert_raises_regexp,
-                                   assert_equal, assert_true)
+                                   assert_equal, assert_true, assert_greater_equal)
 from sklearn.utils import shuffle
 
 from bnp.online_hdp import HierarchicalDirichletProcess
@@ -141,7 +141,7 @@ def test_partial_fit_after_fit():
     assert_almost_equal(hdp1.transform(X), hdp2.transform(X))
 
 
-def test_enable_likelihood():
+def test_likelihood_check():
     """Test enable doc_likelihood check
 
     The result should be the same no matter it
@@ -156,7 +156,8 @@ def test_enable_likelihood():
         'learning_method': 'batch',
         'max_iter': 10,
         'random_state': 1,
-        'check_doc_likelihood': True
+        'check_doc_likelihood': True,
+        'evaluate_every': 1,
     }
     hdp1 = HierarchicalDirichletProcess(**params)
     ret1 = hdp1.fit_transform(X)
@@ -217,3 +218,32 @@ def test_hdp_partial_fit_with_fake_data():
     for _ in xrange(5):
         hdp.partial_fit(tf)
     _hdp_topic_check(hdp, n_topics, words_per_topic, topics_threshold)
+
+
+def test_hdp_score():
+    """Test HDP score function
+    """
+    n_topics = 10
+    n_topic_truncate = 3
+    words_per_topic = 10
+    tf = make_doc_word_matrix(n_topics=n_topics,
+                              words_per_topic=words_per_topic,
+                              docs_per_topic=100,
+                              words_per_doc=50,
+                              shuffle=True,
+                              random_state=0)
+
+    hdp1 = HierarchicalDirichletProcess(n_topic_truncate=n_topic_truncate,
+                                        n_doc_truncate=3,
+                                        max_iter=1,
+                                        random_state=0)
+
+    hdp2 = HierarchicalDirichletProcess(n_topic_truncate=n_topic_truncate,
+                                        n_doc_truncate=3,
+                                        max_iter=5,
+                                        random_state=0)
+    hdp1.fit(tf)
+    hdp2.fit(tf)
+    score_1 = hdp1.score(tf)
+    score_2 = hdp2.score(tf)
+    assert_greater_equal(score_2, score_1)
