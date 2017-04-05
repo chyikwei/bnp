@@ -75,7 +75,8 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
                                          max_iters, mean_change_tol,
                                          cal_sstats, cal_doc_distr,
                                          burn_in_iters=3,
-                                         check_doc_likelihood=False):
+                                         check_doc_likelihood=False,
+                                         cal_likelihood=False):
     """Update local variational parameter
 
     This is step 3~10 in reference [1]
@@ -107,10 +108,8 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
     else:
         suff_stats = None
 
-    if cal_doc_distr:
-        doc_topic_distr = np.empty((n_samples, n_topic_truncate))
-    else:
-        doc_topic_distr = None
+    doc_likelihood = 0.0 if cal_likelihood else None
+    doc_topic_distr = np.empty((n_samples, n_topic_truncate)) if cal_doc_distr else None
 
     if is_sparse_x:
         X_data = X.data
@@ -123,8 +122,9 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
             ids = X_indices[X_indptr[idx_d]:X_indptr[idx_d + 1]]
             cnts = X_data[X_indptr[idx_d]:X_indptr[idx_d + 1]]
         else:
-            ids = np.nonzero(X[idx_d, :])[0]
-            cnts = X[idx_d, ids]
+            X_d = np.ravel(X[idx_d, :])
+            ids = np.nonzero(X_d)[0]
+            cnts = X_d[ids]
 
         # check if doc is empty
         if ids.shape[0] == 0:
@@ -215,7 +215,19 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
         if cal_sstats:
             suff_stats['v_stick'] += np.sum(zeta_d, axis=0)
             suff_stats['lambda'][:, ids] += np.dot(zeta_d.T, phi_all.T)
-    return doc_topic_distr, suff_stats
+
+        if cal_likelihood:
+            doc_likelihood += _local_likelihood_bound(alpha,
+                                                      elog_beta_d_weighted,
+                                                      elog_stick,
+                                                      gamma_d,
+                                                      elog_local_stick,
+                                                      log_phi_d,
+                                                      phi_d,
+                                                      log_zeta_d,
+                                                      zeta_d)
+
+    return doc_topic_distr, suff_stats, doc_likelihood
 
 
 class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
@@ -276,7 +288,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         Only used in online learning.
 
     evaluate_every : int, optional (default=0)
-        How often to evaluate perplexity. Only used in `fit` method.
+        How often to evaluate ELOB. Only used in `fit` method.
         set it to 0 or negative number to not evalute perplexity in
         training at all. Evaluating perplexity can help you check convergence
         in training process, but it will also increase total training time.
@@ -398,6 +410,25 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         check_non_negative(X, whom)
         return X
 
+    def _check_inference(self, X, whom):
+        """Check inference conditions
+
+        The function will check model is fitted and input matrix
+        has correct shape & value
+        """
+        if not hasattr(self, "lambda_"):
+            raise NotFittedError("no 'lambda_' attribute in model."
+                                 " Please fit model first.")
+
+        self._check_non_neg_array(X, whom)
+
+        n_features = X.shape[1]
+        if n_features != self.lambda_.shape[1]:
+            raise ValueError(
+                "The provided data has %d dimensions while "
+                "the model was trained with feature size %d." %
+                (n_features, self.lambda_.shape[1]))
+
     def _init_global_latent_vars(self, n_docs, n_features):
         """Initialize latent variables."""
 
@@ -432,7 +463,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         self.n_mini_batch_iter_ += 1
         return rhot
 
-    def _e_step(self, X, cal_sstats, cal_doc_distr, parallel=None):
+    def _e_step(self, X, cal_sstats, cal_doc_distr, cal_likelihood, parallel=None):
 
         if parallel:
             n_jobs = parallel.n_jobs
@@ -447,11 +478,14 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                                                       cal_sstats,
                                                       cal_doc_distr,
                                                       check_doc_likelihood=\
-                                                      self.check_doc_likelihood)
+                                                      self.check_doc_likelihood,
+                                                      cal_likelihood=\
+                                                      cal_likelihood)
                 for idx_slice in gen_even_slices(X.shape[0], n_jobs))
-            doc_topics, sstats_list = zip(*results)
+            doc_topics, sstats_list, likelihood_list = zip(*results)
 
             doc_topic_distr = np.vstack(doc_topics) if cal_doc_distr else None
+            doc_likelihood = np.sum(likelihood_list) if cal_likelihood else None
             sstats = None
             if cal_sstats:
                 lambda_sstats = np.zeros(self.lambda_.shape)
@@ -464,7 +498,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                     'v_stick': v_stick_sstats,
                 }
         else:
-            doc_topic_distr, sstats = \
+            doc_topic_distr, sstats, doc_likelihood = \
                 _update_local_variational_parameters(X,
                                                      self.elog_beta_,
                                                      self.elog_v_stick_,
@@ -473,8 +507,10 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                                                      self.max_doc_update_iter,
                                                      self.mean_change_tol,
                                                      cal_sstats,
-                                                     cal_doc_distr)
-        return (doc_topic_distr, sstats)
+                                                     cal_doc_distr,
+                                                     cal_likelihood=\
+                                                     cal_likelihood)
+        return (doc_topic_distr, sstats, doc_likelihood)
 
     #def _optimal_ordering(self):
     #    """ordering the topics
@@ -559,10 +595,11 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
 
         for idx_slice in gen_batches(n_samples, batch_size):
             X_slice = X[idx_slice, :]
-            _, sstats = self._e_step(X_slice,
-                                     cal_sstats=True,
-                                     cal_doc_distr=False,
-                                     parallel=None)
+            _, sstats, _ = self._e_step(X_slice,
+                                        cal_sstats=True,
+                                        cal_doc_distr=False,
+                                        cal_likelihood=False,
+                                        parallel=None)
             self._m_step(sstats,
                          n_samples=X_slice.shape[0],
                          online_update=True)
@@ -588,19 +625,22 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
 
         n_jobs = _get_n_jobs(self.n_jobs)
         verbose = max(0, self.verbose - 1)
+        evaluate_every = self.evaluate_every
         with Parallel(n_jobs=n_jobs, verbose=verbose) as parallel:
             for i in xrange(self.max_iter):
                 # batch update
-                _, sstats = self._e_step(X,
-                                         cal_sstats=True,
-                                         cal_doc_distr=False,
-                                         parallel=parallel)
+                _, sstats, _ = self._e_step(X,
+                                            cal_sstats=True,
+                                            cal_doc_distr=False,
+                                            cal_likelihood=False,
+                                            parallel=parallel)
                 self._m_step(sstats, n_samples=X.shape[0], online_update=False)
-
-                if self.verbose:
-                    print("iteration: %d" % (i + 1))
-                # TODO: check perplexity
-
+                
+                # check perplexity
+                if evaluate_every > 0 and (i + 1) % evaluate_every == 0:
+                    bound = self.score(X)
+                    if self.verbose:
+                        print('iteration: %d, ELOB: %.4f' % (i + 1, bound))
         return self
 
     def transform(self, X):
@@ -618,20 +658,16 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
             Unnormalized document topic distribution for X.
 
         """
-        if not hasattr(self, "lambda_"):
-            raise NotFittedError("no 'lambda_' attribute in model."
-                                 " Please fit model first.")
-
-        X = self._check_non_neg_array(
-            X, "HierarchicalDirichletProcess.transform")
+        self._check_inference(X, "HierarchicalDirichletProcess.transform")
 
         n_jobs = _get_n_jobs(self.n_jobs)
         verbose = max(0, self.verbose-1)
         with Parallel(n_jobs=n_jobs, verbose=verbose) as parallel:
-            doc_topic_distr, _ = self._e_step(X,
-                                              cal_sstats=False,
-                                              cal_doc_distr=True,
-                                              parallel=parallel)
+            doc_topic_distr, _, _ = self._e_step(X,
+                                                 cal_sstats=False,
+                                                 cal_doc_distr=True,
+                                                 cal_likelihood=False,
+                                                 parallel=parallel)
         return doc_topic_distr
 
     def topic_distribution(self):
@@ -649,6 +685,52 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         topic_distr = stick_expectation(self.v_stick_)
         return topic_distr
 
+    def _approximate_bound(self, X):
+        """Calculate approximate log-likelihood for the model
+
+        Parameters
+        ----------
+        X : array-like or sparse matrix, shape=(n_samples, n_features)
+            Document word matrix.
+
+        Returns
+        -------
+        likelihood : float
+            approximate log-likelihood for variational parameters
+        """
+        likelihood = 0.0
+        # calculate doc likelihood
+        n_jobs = _get_n_jobs(self.n_jobs)
+        verbose = max(0, self.verbose-1)
+        with Parallel(n_jobs=n_jobs, verbose=verbose) as parallel:
+            _, _, doc_likelihood = self._e_step(X,
+                                                cal_sstats=False,
+                                                cal_doc_distr=False,
+                                                cal_likelihood=True,
+                                                parallel=parallel)
+        likelihood += doc_likelihood
+
+        # E[log(p(beta|eta) - log(q(beta|lambda))]
+        # `beta` is Dirichlet distribution
+        lambda_ = self.lambda_
+        elog_beta_ = self.elog_beta_
+        n_features = lambda_.shape[1]
+        likelihood += np.sum((self.eta - lambda_) * elog_beta_)
+        likelihood += np.sum(gammaln(lambda_) - gammaln(self.eta))
+        likelihood += np.sum(gammaln(self.eta * n_features) - gammaln(np.sum(lambda_, 1)))
+
+        # E[log(p(v_k|omega)) - log(q(v_k|a_k))]
+        # `v_k` is Beta distribution
+        v_k = self.v_stick_
+        likelihood += (v_k.shape[1] * np.log(self.omega))
+        v_k_col_sum = np.sum(v_k, 0)
+        dig_sum = psi(v_k_col_sum)
+        likelihood += np.sum((np.array([1.0, self.omega])[:, np.newaxis] - v_k) * \
+                             (psi(v_k) - dig_sum))
+        likelihood += np.sum(gammaln(v_k))
+        likelihood -= np.sum(gammaln(v_k_col_sum))
+        return likelihood
+
     def score(self, X, y=None):
         """Calculate approximate log-likelihood as score.
 
@@ -662,4 +744,6 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         score : float
             Use approximate bound as score.
         """
-        pass
+
+        self._check_inference(X, "HierarchicalDirichletProcess.score")
+        return self._approximate_bound(X)
