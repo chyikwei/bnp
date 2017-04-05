@@ -122,9 +122,8 @@ def _update_local_variational_parameters(X, elog_beta, elog_stick,
             ids = X_indices[X_indptr[idx_d]:X_indptr[idx_d + 1]]
             cnts = X_data[X_indptr[idx_d]:X_indptr[idx_d + 1]]
         else:
-            X_d = np.ravel(X[idx_d, :])
-            ids = np.nonzero(X_d)[0]
-            cnts = X_d[ids]
+            ids = np.nonzero(X[idx_d, :])[0]
+            cnts = X[idx_d, ids]
 
         # check if doc is empty
         if ids.shape[0] == 0:
@@ -420,7 +419,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
             raise NotFittedError("no 'lambda_' attribute in model."
                                  " Please fit model first.")
 
-        self._check_non_neg_array(X, whom)
+        X = self._check_non_neg_array(X, whom)
 
         n_features = X.shape[1]
         if n_features != self.lambda_.shape[1]:
@@ -428,6 +427,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                 "The provided data has %d dimensions while "
                 "the model was trained with feature size %d." %
                 (n_features, self.lambda_.shape[1]))
+        return X
 
     def _init_global_latent_vars(self, n_docs, n_features):
         """Initialize latent variables."""
@@ -658,7 +658,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
             Unnormalized document topic distribution for X.
 
         """
-        self._check_inference(X, "HierarchicalDirichletProcess.transform")
+        X = self._check_inference(X, "HierarchicalDirichletProcess.transform")
 
         n_jobs = _get_n_jobs(self.n_jobs)
         verbose = max(0, self.verbose-1)
@@ -745,5 +745,5 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
             Use approximate bound as score.
         """
 
-        self._check_inference(X, "HierarchicalDirichletProcess.score")
+        X = self._check_inference(X, "HierarchicalDirichletProcess.score")
         return self._approximate_bound(X)
