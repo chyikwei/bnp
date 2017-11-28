@@ -378,7 +378,6 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         self.n_jobs = int(n_jobs)
         self.verbose = int(verbose)
         self.random_state = random_state
-        self.initialized_ = False
 
     def _check_params(self):
         """Check model parameters."""
@@ -433,6 +432,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         """Initialize latent variables."""
 
         self.random_state_ = check_random_state(self.random_state)
+        self.n_iter_ = 0
 
         # initialize global variational variables
         # follow reference [3]
@@ -451,7 +451,6 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                                   np.arange(self.n_topic_truncate-1, 0, -1)])
         self.elog_v_stick_ = log_stick_expectation(self.v_stick_)
         self.sstats_v_stick_ = np.zeros(self.n_topic_truncate)
-        self.initialized_  = True
 
     def _init_min_batch_parameters(self):
         self.n_mini_batch_iter_ = 1
@@ -641,6 +640,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
                     bound = self.score(X)
                     if self.verbose:
                         print('iteration: %d, ELOB: %.4f' % (i + 1, bound))
+                self.n_iter_ += 1
         return self
 
     def transform(self, X):
