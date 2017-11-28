@@ -4,6 +4,7 @@ from sklearn.externals.six.moves import xrange
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.testing import (assert_almost_equal, assert_raises_regexp,
                                    assert_equal, assert_true, assert_greater_equal)
+from sklearn.utils.estimator_checks import check_estimator
 from sklearn.utils import shuffle
 
 from bnp.online_hdp import HierarchicalDirichletProcess
@@ -26,6 +27,11 @@ def _hdp_topic_check(hdp_model, n_topics, words_per_topic,
         assert_equal(max_idx - min_idx, words_per_topic - 1)
         topic_covers[int(min_idx / words_per_topic)] = 1
     assert_true((topic_covers > 0.).all())
+
+
+def test_estimator():
+    """Test HDP estimator"""
+    return check_estimator(HierarchicalDirichletProcess)
 
 
 def test_hdp_fit_transform():

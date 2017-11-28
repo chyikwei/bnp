@@ -3,7 +3,7 @@ import unittest
 import numpy as np
 from numpy.random import RandomState
 from sklearn.utils.testing import assert_almost_equal
-from sklearn.utils.extmath import logsumexp
+from scipy.misc import logsumexp
 
 from bnp.utils.extmath import (row_log_normalize_exp,
                                mean_change_2d, beta_param_update)
