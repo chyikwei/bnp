@@ -2,10 +2,11 @@ import numpy as np
 
 from sklearn.externals.six.moves import xrange
 from sklearn.exceptions import NotFittedError
-from sklearn.utils.testing import (assert_almost_equal, assert_raises_regexp,
-                                   assert_equal, assert_true, assert_greater_equal)
+from sklearn.utils.testing import (assert_almost_equal,
+                                   assert_raises_regexp,
+                                   assert_equal, assert_true,
+                                   assert_greater_equal)
 from sklearn.utils.estimator_checks import check_estimator
-from sklearn.utils import shuffle
 
 from bnp.online_hdp import HierarchicalDirichletProcess
 from bnp.utils import make_doc_word_matrix, make_uniform_doc_word_matrix
@@ -208,7 +209,7 @@ def test_hdp_fit_topics_with_fake_data():
 
 def test_hdp_partial_fit_with_fake_data():
     """Test HDP partial_fit with fake data
-    
+
     Same as `test_hdp_fit_topics_with_fake_data` but
     use `partial_fit` to replace `fit`
     """

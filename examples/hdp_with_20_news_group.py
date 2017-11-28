@@ -26,13 +26,15 @@ n_inference_docs = 20
 
 rs = RandomState(100)
 
+
 def print_top_words(model, feature_names, n_top_words):
     topic_distr = model.topic_distribution()
     for topic_idx in range(model.lambda_.shape[0]):
         topic = model.lambda_[topic_idx, :]
         message = "Topic #%d (%.3f): " % (topic_idx, topic_distr[topic_idx])
-        message += " ".join([feature_names[i]
-                             for i in topic.argsort()[:-n_top_words - 1:-1]])
+        topics_idx = topic.argsort()[:-n_top_words - 1:-1]
+        features = [feature_names[t] for t in topics_idx]
+        message += " ".join(features)
         print(message)
     print()
 
@@ -96,11 +98,12 @@ print_top_words(hdp, tf_feature_names, n_top_words)
 print("\nTop topics in each group:")
 train_topics = hdp.transform(tf)
 # normalize
-train_topics =  train_topics / np.sum(train_topics, axis=1)[:, np.newaxis]
+train_topics = train_topics / np.sum(train_topics, axis=1)[:, np.newaxis]
 for grp_idx, group_name in enumerate(target_names):
     doc_idx = np.where(train_targets == grp_idx)[0]
     mean_doc_topics = np.mean(train_topics[doc_idx, :], axis=0)
     top_idx = mean_doc_topics.argsort()[:-n_top_topics - 1:-1]
     print("group: %s:" % group_name)
-    print("top topics: %s" % (", ".join(["#%d (%.3f)" % (idx, mean_doc_topics[idx]) for idx in top_idx])))
+    print("top topics: %s" % (", ".join(["#%d (%.3f)" %
+          (idx, mean_doc_topics[idx]) for idx in top_idx])))
     print()
