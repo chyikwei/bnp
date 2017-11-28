@@ -26,7 +26,7 @@ def make_doc_word_matrix(n_topics, words_per_topic, docs_per_topic,
 
     docs_per_topic : int
         number of documents per topic
-    
+
     words_per_doc : int
         number of words per document
 
@@ -38,8 +38,8 @@ def make_doc_word_matrix(n_topics, words_per_topic, docs_per_topic,
 
     Return
     ------
-    matrix: sparse matrix of shape [n_topics * docs_per_topic, n_topics * words_per_topic]
-        doc-words matrix
+    matrix: doc-words matrix. It is a sparse matrix of shape
+            [n_topics * docs_per_topic, n_topics * words_per_topic]
 
     """
     random_state_ = check_random_state(random_state)
@@ -103,8 +103,8 @@ def make_uniform_doc_word_matrix(n_topics, words_per_topic, docs_per_topic,
 
     Return
     ------
-    matrix: sparse matrix of shape [n_topics * docs_per_topic, n_topics * words_per_topic]
-        doc-words matrix
+    matrix: doc-words matrix. It is a sparse matrix of shape
+            [n_topics * docs_per_topic, n_topics * words_per_topic]
 
     """
 

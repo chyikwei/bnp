@@ -2,7 +2,8 @@ import unittest
 
 import numpy as np
 from numpy.random import RandomState
-from sklearn.utils.testing import assert_equal, assert_array_equal, assert_true, assert_less
+from sklearn.utils.testing import (assert_equal, assert_array_equal,
+                                   assert_true, assert_less)
 
 from bnp.utils import make_doc_word_matrix, make_uniform_doc_word_matrix
 
@@ -116,9 +117,12 @@ class TestSampleGenerator(unittest.TestCase):
         assert_equal(dense.shape[0], n_topics * docs_per_topic)
         assert_equal(dense.shape[1], n_topics * words_per_topic)
         row_sum = np.sum(dense, axis=1)
-        assert_array_equal(row_sum, np.repeat(words_per_topic, n_topics * docs_per_topic))
+        doc_topics = np.repeat(words_per_topic, n_topics * docs_per_topic)
+        assert_array_equal(row_sum, doc_topics)
 
     def test_random_state(self):
+        """Test random_state parameter
+        """
         params = {
             'n_topics': 10,
             'words_per_topic': 20,
