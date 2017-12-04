@@ -2,6 +2,7 @@ import unittest
 
 import numpy as np
 from numpy.random import RandomState
+from sklearn.externals.six.moves import xrange
 from sklearn.utils.testing import (assert_equal, assert_array_equal,
                                    assert_true, assert_less)
 
