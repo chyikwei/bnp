@@ -123,8 +123,7 @@ def test_hdp_topic_distribution():
     hdp = HierarchicalDirichletProcess(**params)
 
     assert_raises_regexp(NotFittedError, r"^no 'lambda_' attribute",
-                         hdp.transform, X)
-
+                         hdp.topic_distribution)
     hdp.fit(X)
     topic_distr = hdp.topic_distribution()
     assert_almost_equal(np.sum(topic_distr), 1.0)
@@ -260,3 +259,26 @@ def test_hdp_score():
     score_1 = hdp1.score(tf)
     score_2 = hdp2.score(tf)
     assert_greater_equal(score_2, score_1)
+
+
+def test_hdp_invalid_parameters():
+    """Test HDP Invalid paramters
+    """
+    X = make_uniform_doc_word_matrix(
+        n_topics=10, words_per_topic=3, docs_per_topic=3)
+
+    hdp1 = HierarchicalDirichletProcess(n_topic_truncate=10,
+                                        n_doc_truncate=3,
+                                        max_iter=-1,
+                                        random_state=0)
+
+    assert_raises_regexp(ValueError, r"^Invalid ",
+                         hdp1.fit, X)
+
+    hdp2 = HierarchicalDirichletProcess(n_topic_truncate=10,
+                                        n_doc_truncate=3,
+                                        learning_method='na',
+                                        random_state=0)
+
+    assert_raises_regexp(ValueError, r"^Invalid 'learning_method'",
+                         hdp2.fit, X)

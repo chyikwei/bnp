@@ -386,7 +386,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
         for param in pos_int_params:
             val = getattr(self, param)
             if val <= 0:
-                raise ValueError("Invalid '%s' parameter: %r", param, val)
+                raise ValueError("Invalid '%s' parameter: %r" % (param, val))
 
         if self.learning_method not in ("batch", "online"):
             raise ValueError("Invalid 'learning_method' parameter: %r"
