@@ -1,10 +1,11 @@
+[![Build Status](https://travis-ci.org/chyikwei/bnp.svg?branch=master)](https://travis-ci.org/chyikwei/bnp)
 [![Build Status](https://circleci.com/gh/chyikwei/bnp.png?&style=shield)](https://circleci.com/gh/gh/chyikwei/bnp)
 [![Coverage Status](https://coveralls.io/repos/github/chyikwei/bnp/badge.svg?branch=master)](https://coveralls.io/github/chyikwei/bnp?branch=master)
 
 # Bayesian Nonparametric
 Bayesian Nonparametric models with Python.
 
-Models will follow scikit-learn's API and can be used as scikit-learn's extension.
+Models follow scikit-learn's API and can be used as its extension.
 
 Current model:
 --------------
@@ -100,7 +101,7 @@ Topic 8 (proportion: 0.16): 48 42 46 49 45 47 41 44 40 43
 Topic 9 (proportion: 0.19): 21 29 28 23 20 24 26 27 25 22
 ```
 
-Here HDP find 7 large topics (> 1%) and those can map to the hidden topics we generate.
+Here HDP find 7 large topics (> 1%) and those can map to the hidden topics we generated before.
 
 
 Examples
