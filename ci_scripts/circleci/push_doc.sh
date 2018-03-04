@@ -4,15 +4,15 @@
 # The behavior of the script is controlled by environment variable defined
 # in the circle.yml in the top level folder of the project.
 
+set -e
+
 MSG="Pushing the docs for revision for branch: $CIRCLE_BRANCH, commit $CIRCLE_SHA1"
 
-cd $HOME
-# Copy the build docs to a temporary folder
-rm -rf tmp
-mkdir tmp
-cp -R $HOME/$DOC_REPO/doc/_build/html/* ./tmp/ 
+GENERATED_DOC_DIR=$1
+GENERATED_DOC_DIR=$(readlink -f $GENERATED_DOC_DIR)
 
 # Clone the docs repo if it isnt already there
+cd $HOME
 if [ ! -d $DOC_REPO ];
     then git clone "git@github.com:$USERNAME/"$DOC_REPO".git";
 fi
@@ -36,12 +36,12 @@ for name in $(ls -A $HOME/$DOC_REPO); do
 done
 
 # Copy the new build docs
-mkdir $DOC_URL
-cp -R $HOME/tmp/* ./$DOC_URL/
+cp -R GENERATED_DOC_DIR ./
 
 git config --global user.email $EMAIL
 git config --global user.name $USERNAME
-git add -f ./$DOC_URL/
+git config push.default matching
+git add -f ./
 git commit -m "$MSG"
 git push -f origin gh-pages
 if [ $? -ne 0 ]; then
