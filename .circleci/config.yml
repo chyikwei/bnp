@@ -1,6 +1,6 @@
 version: 2.0
 jobs:
-  build_doc:
+  build:
     docker:
       - image: circleci/python:3.6.1
     environment:
@@ -52,13 +52,14 @@ workflows:
   version: 2
   build-doc-and-deploy:
     jobs:
-      - build_doc
+      - build:
           filters:
             branches:
               ignore: gh-pages
+
       - deploy:
           requires:
-            - build_doc
+            - build
           filters:
             branches:
               only: master
