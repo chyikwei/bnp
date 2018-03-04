@@ -22,7 +22,7 @@ conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
   setuptools numpy scipy cython nose coverage matplotlib sphinx pillow \
   sphinx_rtd_theme numpydoc scikit-learn
 
-source activate testenv
+source activate $CONDA_ENV_NAME
 pip install sphinx-gallery
 python setup.py clean
 python setup.py develop
