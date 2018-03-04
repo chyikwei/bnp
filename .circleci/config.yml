@@ -53,9 +53,12 @@ workflows:
   build-doc-and-deploy:
     jobs:
       - build_doc
+          filters:
+            branches:
+              ignore: gh-pages
       - deploy:
           requires:
             - build_doc
-  branches:
-    ignore:
-      - gh-pages
+          filters:
+            branches:
+              only: master
