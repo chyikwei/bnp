@@ -19,7 +19,7 @@ conda update --yes --quiet conda
 # Configure the conda environment and put it in the path using the
 # provided versions
 conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
-  setuptools numpy scipy  cython nose coverage matplotlib sphinx pillow
+  setuptools numpy scipy cython nose coverage matplotlib sphinx pillow \
   sphinx-gallery pillow sphinx_rtd_theme numpydoc scikit-learn
 
 source activate testenv
