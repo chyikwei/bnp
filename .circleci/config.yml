@@ -1,7 +1,6 @@
-version: 2
-
+version: 2.0
 jobs:
-  python3:
+  build_doc:
     docker:
       - image: circleci/python:3.6.1
     environment:
@@ -53,11 +52,10 @@ workflows:
   version: 2
   build-doc-and-deploy:
     jobs:
-      - python3
+      - build_doc
       - deploy:
           requires:
-            - python3
-
+            - build_doc
   branches:
-      ignore:
-        - gh-pages
+    ignore:
+      - gh-pages
