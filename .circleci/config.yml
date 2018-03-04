@@ -5,7 +5,7 @@ jobs:
       - image: circleci/python:3.6.1
     environment:
       - MINICONDA_PATH: ~/miniconda
-      - CONDA_ENV_NAME: testenv
+      - CONDA_ENV_NAME: testdocenv
       - PYTHON_VERSION: 3
     steps:
       - checkout

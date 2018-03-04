@@ -20,9 +20,10 @@ conda update --yes --quiet conda
 # provided versions
 conda create -n $CONDA_ENV_NAME --yes --quiet python="${PYTHON_VERSION:-*}" \
   setuptools numpy scipy cython nose coverage matplotlib sphinx pillow \
-  sphinx-gallery pillow sphinx_rtd_theme numpydoc scikit-learn
+  sphinx_rtd_theme numpydoc scikit-learn
 
 source activate testenv
+pip install sphinx-gallery
 python setup.py clean
 python setup.py develop
 # The pipefail is requested to propagate exit code
