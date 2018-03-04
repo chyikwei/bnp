@@ -239,10 +239,10 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    n_topic_truncate : int, optional (default=150)
+    n_topic_truncate : int, optional (default=20)
         topics level truncation. In literature, it is `K`
 
-    n_doc_truncate: int, optional (default=20)
+    n_doc_truncate: int, optional (default=10)
         document level truncation. In literature, it is `T`
 
     omega: float, optional (default=1.0)
@@ -270,7 +270,7 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
     scale: float, optional (default=1.0)
         scale for learning rate.
 
-    max_iter : int, optional (default=100)
+    max_iter : int, optional (default=10)
         The maximum number of iterations.
 
     total_samples: int, optional (default=1e6))
@@ -345,9 +345,9 @@ class HierarchicalDirichletProcess(BaseEstimator, TransformerMixin):
 
     """
 
-    def __init__(self, n_topic_truncate=150, n_doc_truncate=20, omega=1.0,
+    def __init__(self, n_topic_truncate=20, n_doc_truncate=10, omega=1.0,
                  alpha=1.0, eta=1e-2, learning_method='online', kappa=0.5,
-                 tau=10., scale=1.0, max_iter=100, total_samples=1e6,
+                 tau=10., scale=1.0, max_iter=10, total_samples=1e6,
                  batch_size=256, evaluate_every=0, perp_tol=1e-1,
                  mean_change_tol=1e-3, max_doc_update_iter=100,
                  check_doc_likelihood=False, n_jobs=1,
