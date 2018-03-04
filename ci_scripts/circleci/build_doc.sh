@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
 sudo -E apt-get -yq remove texlive-binaries --purge
 sudo apt-get update

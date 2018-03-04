@@ -11,7 +11,7 @@ jobs:
       - checkout
       - restore_cache:
           key: v1-datasets-{{ .Branch }}
-      - run: ./ci_scripts/circleci/build_doc.sh
+      - run: bash ./ci_scripts/circleci/build_doc.sh
       - save_cache:
           key: v1-datasets-{{ .Branch }}
           paths:
