@@ -399,10 +399,10 @@
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
-<span class="sd">    n_topic_truncate : int, optional (default=150)</span>
+<span class="sd">    n_topic_truncate : int, optional (default=20)</span>
 <span class="sd">        topics level truncation. In literature, it is `K`</span>
 
-<span class="sd">    n_doc_truncate: int, optional (default=20)</span>
+<span class="sd">    n_doc_truncate: int, optional (default=10)</span>
 <span class="sd">        document level truncation. In literature, it is `T`</span>
 
 <span class="sd">    omega: float, optional (default=1.0)</span>
@@ -430,7 +430,7 @@
 <span class="sd">    scale: float, optional (default=1.0)</span>
 <span class="sd">        scale for learning rate.</span>
 
-<span class="sd">    max_iter : int, optional (default=100)</span>
+<span class="sd">    max_iter : int, optional (default=10)</span>
 <span class="sd">        The maximum number of iterations.</span>
 
 <span class="sd">    total_samples: int, optional (default=1e6))</span>
@@ -505,9 +505,9 @@
 
 <span class="sd">    &quot;&quot;&quot;</span>
 
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_topic_truncate</span><span class="o">=</span><span class="mi">150</span><span class="p">,</span> <span class="n">n_doc_truncate</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n_topic_truncate</span><span class="o">=</span><span class="mi">20</span><span class="p">,</span> <span class="n">n_doc_truncate</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">omega</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span>
                  <span class="n">alpha</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">eta</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">,</span> <span class="n">learning_method</span><span class="o">=</span><span class="s1">&#39;online&#39;</span><span class="p">,</span> <span class="n">kappa</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span>
-                 <span class="n">tau</span><span class="o">=</span><span class="mf">10.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">total_samples</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span>
+                 <span class="n">tau</span><span class="o">=</span><span class="mf">10.</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">max_iter</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">total_samples</span><span class="o">=</span><span class="mf">1e6</span><span class="p">,</span>
                  <span class="n">batch_size</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">evaluate_every</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">perp_tol</span><span class="o">=</span><span class="mf">1e-1</span><span class="p">,</span>
                  <span class="n">mean_change_tol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">,</span> <span class="n">max_doc_update_iter</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
                  <span class="n">check_doc_likelihood</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_jobs</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>

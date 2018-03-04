@@ -167,7 +167,7 @@ and the code structure is the same.
 (<a class="reference external" href="https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/decomposition/online_lda.py">https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/decomposition/online_lda.py</a>)</p>
 <dl class="class">
 <dt id="bnp.online_hdp.HierarchicalDirichletProcess">
-<em class="property">class </em><code class="descclassname">bnp.online_hdp.</code><code class="descname">HierarchicalDirichletProcess</code><span class="sig-paren">(</span><em>n_topic_truncate=150</em>, <em>n_doc_truncate=20</em>, <em>omega=1.0</em>, <em>alpha=1.0</em>, <em>eta=0.01</em>, <em>learning_method='online'</em>, <em>kappa=0.5</em>, <em>tau=10.0</em>, <em>scale=1.0</em>, <em>max_iter=100</em>, <em>total_samples=1000000.0</em>, <em>batch_size=256</em>, <em>evaluate_every=0</em>, <em>perp_tol=0.1</em>, <em>mean_change_tol=0.001</em>, <em>max_doc_update_iter=100</em>, <em>check_doc_likelihood=False</em>, <em>n_jobs=1</em>, <em>burn_in_iters=3</em>, <em>verbose=0</em>, <em>random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bnp/online_hdp.html#HierarchicalDirichletProcess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bnp.online_hdp.HierarchicalDirichletProcess" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><code class="descclassname">bnp.online_hdp.</code><code class="descname">HierarchicalDirichletProcess</code><span class="sig-paren">(</span><em>n_topic_truncate=20</em>, <em>n_doc_truncate=10</em>, <em>omega=1.0</em>, <em>alpha=1.0</em>, <em>eta=0.01</em>, <em>learning_method='online'</em>, <em>kappa=0.5</em>, <em>tau=10.0</em>, <em>scale=1.0</em>, <em>max_iter=10</em>, <em>total_samples=1000000.0</em>, <em>batch_size=256</em>, <em>evaluate_every=0</em>, <em>perp_tol=0.1</em>, <em>mean_change_tol=0.001</em>, <em>max_doc_update_iter=100</em>, <em>check_doc_likelihood=False</em>, <em>n_jobs=1</em>, <em>burn_in_iters=3</em>, <em>verbose=0</em>, <em>random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bnp/online_hdp.html#HierarchicalDirichletProcess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bnp.online_hdp.HierarchicalDirichletProcess" title="Permalink to this definition">¶</a></dt>
 <dd><p>Hierarchical Dirichlet Process with Stochastic Variational Inference</p>
 <p>HDP is the nonparametric version of LDA. The algorithm determines
 the number of topics based on data it fits instead of using a fixed
@@ -183,11 +183,11 @@ implementation in [3].</dd>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n_topic_truncate</strong> : int, optional (default=150)</p>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>n_topic_truncate</strong> : int, optional (default=20)</p>
 <blockquote>
 <div><p>topics level truncation. In literature, it is <cite>K</cite></p>
 </div></blockquote>
-<p><strong>n_doc_truncate: int, optional (default=20)</strong></p>
+<p><strong>n_doc_truncate: int, optional (default=10)</strong></p>
 <blockquote>
 <div><p>document level truncation. In literature, it is <cite>T</cite></p>
 </div></blockquote>
@@ -223,7 +223,7 @@ learning.  It should be greater than 1.0.</p>
 <blockquote>
 <div><p>scale for learning rate.</p>
 </div></blockquote>
-<p><strong>max_iter</strong> : int, optional (default=100)</p>
+<p><strong>max_iter</strong> : int, optional (default=10)</p>
 <blockquote>
 <div><p>The maximum number of iterations.</p>
 </div></blockquote>
