@@ -14,6 +14,8 @@ jobs:
       - run: ./ci_scripts/circleci/build_doc.sh
       - save_cache:
           key: v1-datasets-{{ .Branch }}
+          paths:
+            - ~/bnp_cache_data
       - store_artifacts:
           path: doc/_build/html
           destination: doc
