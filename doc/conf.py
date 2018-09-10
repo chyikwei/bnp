@@ -276,16 +276,20 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'project-template', u'project-template Documentation',
-   u'Vighnesh Birodkar', 'project-template', 'One line description of project.',
+  ('index', 'bnp', u'BNP Documentation',
+   u'Chyi-Kwei Yau', 'bnp', 'Bayesian Nonparametric',
    'Miscellaneous'),
 ]
 
 def generate_example_rst(app, what, name, obj, options, lines):
     # generate empty examples files, so that we don't get
     # inclusion errors if there are no examples for a class / module
-    examples_path = os.path.join(app.srcdir, "modules", "generated",
-                                 "%s.examples" % name)
+    examples_dir =  os.path.join(app.srcdir, "modules", "generated")
+    examples_path = os.path.join(examples_dir, "%s.examples" % name)
+
+    if not os.path.exists(examples_dir):
+        os.makedirs(examples_dir)
+
     if not os.path.exists(examples_path):
         # touch file
         open(examples_path, 'w').close()
