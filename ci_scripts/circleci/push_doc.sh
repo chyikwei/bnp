@@ -8,8 +8,12 @@ set -e
 
 MSG="Pushing the docs for revision for branch: $CIRCLE_BRANCH, commit $CIRCLE_SHA1"
 
-GENERATED_DOC_DIR=$1
-GENERATED_DOC_DIR=$(readlink -f $GENERATED_DOC_DIR)
+cd $HOME
+# Copy the build docs to a temporary folder
+rm -rf tmp
+mkdir tmp
+cp -R $HOME/$DOC_REPO/doc/_build/html/* ./tmp/
+
 
 # Clone the docs repo if it isnt already there
 cd $HOME
@@ -38,7 +42,7 @@ for name in $(ls -A $HOME/$DOC_REPO); do
 done
 
 # Copy the new build docs
-cp -R GENERATED_DOC_DIR ./
+cp -R $HOME/tmp/ ./
 
 git config --global user.email $EMAIL
 git config --global user.name $USERNAME

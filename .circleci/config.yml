@@ -42,7 +42,7 @@ jobs:
       - attach_workspace:
           at: doc/_build/html
       - run: ls -ltrh doc/_build/html
-      - run: bash ci_scripts/circleci/push_doc.sh doc/_build/html
+      - run: bash ci_scripts/circleci/push_doc.sh
 
 workflows:
   version: 2
