@@ -1,0 +1,508 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Template &mdash; sklearn-template 0.1.0 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="_static/gallery.css" type="text/css" />
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+
+  
+  <script src="_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="index.html" class="icon icon-home"> sklearn-template
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="auto_examples/index.html">General examples</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">sklearn-template</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html">Docs</a> &raquo;</li>
+        
+      <li>Template</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="_sources/template.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="template">
+<h1>Template<a class="headerlink" href="#template" title="Permalink to this headline">¶</a></h1>
+<p>The documentation of the template module.</p>
+<span class="target" id="module-bnp.online_hdp"></span><p>Online HDP with variational inference</p>
+<p>This implementation is modified from Chong Wang’s online-hdp code
+(<a class="reference external" href="https://github.com/blei-lab/online-hdp">https://github.com/blei-lab/online-hdp</a>)</p>
+<p>Also, some code are from scikit-learn’s online_lda implementation
+and the code structure is the same.
+(<a class="reference external" href="https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/decomposition/online_lda.py">https://github.com/scikit-learn/scikit-learn/blob/master/sklearn/decomposition/online_lda.py</a>)</p>
+<dl class="class">
+<dt id="bnp.online_hdp.HierarchicalDirichletProcess">
+<em class="property">class </em><code class="descclassname">bnp.online_hdp.</code><code class="descname">HierarchicalDirichletProcess</code><span class="sig-paren">(</span><em>n_topic_truncate=20</em>, <em>n_doc_truncate=10</em>, <em>omega=1.0</em>, <em>alpha=1.0</em>, <em>eta=0.01</em>, <em>learning_method='online'</em>, <em>kappa=0.5</em>, <em>tau=10.0</em>, <em>scale=1.0</em>, <em>max_iter=10</em>, <em>total_samples=1000000.0</em>, <em>batch_size=256</em>, <em>evaluate_every=0</em>, <em>perp_tol=0.1</em>, <em>mean_change_tol=0.001</em>, <em>max_doc_update_iter=100</em>, <em>check_doc_likelihood=False</em>, <em>n_jobs=1</em>, <em>burn_in_iters=3</em>, <em>verbose=0</em>, <em>random_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bnp/online_hdp.html#HierarchicalDirichletProcess"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bnp.online_hdp.HierarchicalDirichletProcess" title="Permalink to this definition">¶</a></dt>
+<dd><p>Hierarchical Dirichlet Process with Stochastic Variational Inference</p>
+<p>HDP is the nonparametric version of LDA. The algorithm determines
+the number of topics based on data it fits instead of using a fixed
+number.</p>
+<dl class="docutils">
+<dt>Note: This implementation is described in Fig. 9 in [1]. A lot</dt>
+<dd>of greek letter are used as variable names. Check Fig. 8
+and Fig. 9 in [1] to know more about the alogrithm and each
+variable. Some of notation are different from original
+implementation in [3].</dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>n_topic_truncate</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional (default=20)</span></dt>
+<dd><p class="first last">topics level truncation. In literature, it is <cite>K</cite></p>
+</dd>
+<dt><strong>n_doc_truncate: int, optional (default=10)</strong></dt>
+<dd><p class="first last">document level truncation. In literature, it is <cite>T</cite></p>
+</dd>
+<dt><strong>omega: float, optional (default=1.0)</strong></dt>
+<dd><p class="first last">topic level concentration</p>
+</dd>
+<dt><strong>alpha: float, optional (default=1.0)</strong></dt>
+<dd><p class="first last">document level concentration</p>
+</dd>
+<dt><strong>eta: float, optional (default=1e-2)</strong></dt>
+<dd><p class="first last">the topic Dirichlet prior</p>
+</dd>
+<dt><strong>learning_method</strong> <span class="classifier-delimiter">:</span> <span class="classifier">‘batch’ | ‘online’, default=’online’</span></dt>
+<dd><p class="first last">Method used to update latent variable. Only used in <cite>fit</cite> method.</p>
+</dd>
+<dt><strong>kappa</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional (default=0.5)</span></dt>
+<dd><p class="first last">This is forgetting rate in the online learning
+method. The value should be set between (0.5, 1.0] to guarantee
+asymptotic convergence. When the value is 0.0 and batch_size is
+<code class="docutils literal notranslate"><span class="pre">n_samples</span></code>, the update method is same as batch learning.</p>
+</dd>
+<dt><strong>tau</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional (default=10.)</span></dt>
+<dd><p class="first last">A (positive) parameter that downweights early iterations in online
+learning.  It should be greater than 1.0.</p>
+</dd>
+<dt><strong>scale: float, optional (default=1.0)</strong></dt>
+<dd><p class="first last">scale for learning rate.</p>
+</dd>
+<dt><strong>max_iter</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional (default=10)</span></dt>
+<dd><p class="first last">The maximum number of iterations.</p>
+</dd>
+<dt><strong>total_samples: int, optional (default=1e6))</strong></dt>
+<dd><p class="first last">number of document. Only used in the <cite>partial_fit</cite> method.</p>
+</dd>
+<dt><strong>batch_size</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional (default=256)</span></dt>
+<dd><p class="first last">MiniBatch size. Number of documents to use in each EM iteration.
+Only used in online learning.</p>
+</dd>
+<dt><strong>evaluate_every</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional (default=0)</span></dt>
+<dd><p class="first last">How often to evaluate ELOB. Only used in <cite>fit</cite> method.
+set it to 0 or negative number to not evalute perplexity in
+training at all. Evaluating perplexity can help you check convergence
+in training process, but it will also increase total training time.
+Evaluating perplexity in every iteration might increase training time
+up to two-fold.</p>
+</dd>
+<dt><strong>perp_tol</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional (default=1e-1)</span></dt>
+<dd><p class="first last">Perplexity tolerance in batch learning. Only used when
+<code class="docutils literal notranslate"><span class="pre">evaluate_every</span></code> is greater than 0.</p>
+</dd>
+<dt><strong>mean_change_tol</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float, optional (default=1e-3)</span></dt>
+<dd><p class="first last">Stopping tolerance for updating document topic distribution in E-step.</p>
+</dd>
+<dt><strong>max_doc_update_iter</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional (default=100)</span></dt>
+<dd><p class="first last">Max number of iterations for updating document topic distribution in
+the E-step.</p>
+</dd>
+<dt><strong>check_doc_likelihood</strong> <span class="classifier-delimiter">:</span> <span class="classifier">boolean, optional (default=False)</span></dt>
+<dd><p class="first last">Make sure doc log likelihood is increasing during e-step.
+Warnings will be printed if likelihood decreases. Also, this will
+significantly increase the training time.</p>
+</dd>
+<dt><strong>n_jobs</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional (default=1)</span></dt>
+<dd><p class="first last">The number of jobs to use in the E-step. If -1, all CPUs are used. For
+<code class="docutils literal notranslate"><span class="pre">n_jobs</span></code> below -1, (n_cpus + 1 + n_jobs) are used. Only used in
+batch learning now since it might not help when you do online learning
+with small batch size.</p>
+</dd>
+<dt><strong>verbose</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int, optional (default=0)</span></dt>
+<dd><p class="first last">Verbosity level.</p>
+</dd>
+<dt><strong>random_state</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int or RandomState instance or None, optional (default=None)</span></dt>
+<dd><p class="first last">Pseudo-random number generator seed control.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">References</p>
+<dl class="docutils">
+<dt>[1] “Stochastic Variational Inference”, Matthew D. Hoffman, David M. Blei,</dt>
+<dd>Chong Wang, John Paisley, 2013</dd>
+<dt>[2] “Online Variational Inference for the Hierarchical Dirichlet Process”,</dt>
+<dd>Chong Wang, John Paisley, David M. Blei, 2011</dd>
+<dt>[3] Chong Wang’s online-hdp code. Link:</dt>
+<dd><a class="reference external" href="https://github.com/blei-lab/online-hdp">https://github.com/blei-lab/online-hdp</a></dd>
+</dl>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Attributes:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>lambda_: array, [n_topic_truncate, n_features]</strong></dt>
+<dd><p class="first last">Golbal Variational parameter for topic word distribution (<cite>beta</cite>)
+q(beta) ~ Direchlet(lambda)</p>
+</dd>
+<dt><strong>v_stick_: array, [2, n_topic_truncate-1]</strong></dt>
+<dd><p class="first last">Golbal Variational parameter for topic stick length (<cite>v</cite>)
+q(v_k) ~ Beta(a_[0, k], a_1[1, k])</p>
+</dd>
+<dt><strong>n_mini_batch_iter_</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">Number of iterations of the mini-batch EM step.</p>
+</dd>
+<dt><strong>n_iter_</strong> <span class="classifier-delimiter">:</span> <span class="classifier">int</span></dt>
+<dd><p class="first last">Number of passes over the dataset.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#bnp.online_hdp.HierarchicalDirichletProcess.fit" title="bnp.online_hdp.HierarchicalDirichletProcess.fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit</span></code></a>(X[,&nbsp;y])</td>
+<td>Learn model for the data X</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">fit_transform</span></code>(X[,&nbsp;y])</td>
+<td>Fit to data, then transform it.</td>
+</tr>
+<tr class="row-odd"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_params</span></code>([deep])</td>
+<td>Get parameters for this estimator.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#bnp.online_hdp.HierarchicalDirichletProcess.partial_fit" title="bnp.online_hdp.HierarchicalDirichletProcess.partial_fit"><code class="xref py py-obj docutils literal notranslate"><span class="pre">partial_fit</span></code></a>(X[,&nbsp;y])</td>
+<td>Online VB with Mini-Batch update.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#bnp.online_hdp.HierarchicalDirichletProcess.score" title="bnp.online_hdp.HierarchicalDirichletProcess.score"><code class="xref py py-obj docutils literal notranslate"><span class="pre">score</span></code></a>(X[,&nbsp;y])</td>
+<td>Calculate approximate log-likelihood as score.</td>
+</tr>
+<tr class="row-even"><td><code class="xref py py-obj docutils literal notranslate"><span class="pre">set_params</span></code>(**params)</td>
+<td>Set the parameters of this estimator.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#bnp.online_hdp.HierarchicalDirichletProcess.topic_distribution" title="bnp.online_hdp.HierarchicalDirichletProcess.topic_distribution"><code class="xref py py-obj docutils literal notranslate"><span class="pre">topic_distribution</span></code></a>()</td>
+<td>Topic distribution from stick-break process</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#bnp.online_hdp.HierarchicalDirichletProcess.transform" title="bnp.online_hdp.HierarchicalDirichletProcess.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(X)</td>
+<td>Transform data X according to the fitted model.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="bnp.online_hdp.HierarchicalDirichletProcess.fit">
+<code class="descname">fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bnp/online_hdp.html#HierarchicalDirichletProcess.fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bnp.online_hdp.HierarchicalDirichletProcess.fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Learn model for the data X</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>X</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array-like or sparse matrix, shape=(n_samples, n_features)</span></dt>
+<dd><p class="first last">Document word matrix.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>self</strong></dt>
+<dd></dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bnp.online_hdp.HierarchicalDirichletProcess.partial_fit">
+<code class="descname">partial_fit</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bnp/online_hdp.html#HierarchicalDirichletProcess.partial_fit"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bnp.online_hdp.HierarchicalDirichletProcess.partial_fit" title="Permalink to this definition">¶</a></dt>
+<dd><p>Online VB with Mini-Batch update.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>X</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array-like or sparse matrix, shape=(n_samples, n_features)</span></dt>
+<dd><p class="first last">Document word matrix.</p>
+</dd>
+<dt><strong>Returns</strong></dt>
+<dd></dd>
+<dt><strong>——-</strong></dt>
+<dd></dd>
+<dt><strong>self</strong></dt>
+<dd></dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bnp.online_hdp.HierarchicalDirichletProcess.score">
+<code class="descname">score</code><span class="sig-paren">(</span><em>X</em>, <em>y=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bnp/online_hdp.html#HierarchicalDirichletProcess.score"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bnp.online_hdp.HierarchicalDirichletProcess.score" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate approximate log-likelihood as score.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>X</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array-like or sparse matrix, shape=(n_samples, n_features)</span></dt>
+<dd><p class="first last">Document word matrix.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>score</strong> <span class="classifier-delimiter">:</span> <span class="classifier">float</span></dt>
+<dd><p class="first last">Use approximate bound as score.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bnp.online_hdp.HierarchicalDirichletProcess.topic_distribution">
+<code class="descname">topic_distribution</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/bnp/online_hdp.html#HierarchicalDirichletProcess.topic_distribution"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bnp.online_hdp.HierarchicalDirichletProcess.topic_distribution" title="Permalink to this definition">¶</a></dt>
+<dd><p>Topic distribution from stick-break process</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>topic_distr</strong> <span class="classifier-delimiter">:</span> <span class="classifier">shape=(n_topics,)</span></dt>
+<dd><p class="first last">topic distribution from stick-breaking process. (sum to 1.)</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="bnp.online_hdp.HierarchicalDirichletProcess.transform">
+<code class="descname">transform</code><span class="sig-paren">(</span><em>X</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/bnp/online_hdp.html#HierarchicalDirichletProcess.transform"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#bnp.online_hdp.HierarchicalDirichletProcess.transform" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transform data X according to the fitted model.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><dl class="first docutils">
+<dt><strong>X</strong> <span class="classifier-delimiter">:</span> <span class="classifier">array-like or sparse matrix, shape=(n_samples, n_features)</span></dt>
+<dd><p class="first last">Document word matrix.</p>
+</dd>
+</dl>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><dl class="first last docutils">
+<dt><strong>doc_topic_distr</strong> <span class="classifier-delimiter">:</span> <span class="classifier">shape=(n_samples, n_topics)</span></dt>
+<dd><p class="first last">Unnormalized document topic distribution for X.</p>
+</dd>
+</dl>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2016, Vighnesh Birodkar.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'./',
+            VERSION:'0.1.0',
+            LANGUAGE:'None',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="_static/jquery.js"></script>
+      <script type="text/javascript" src="_static/underscore.js"></script>
+      <script type="text/javascript" src="_static/doctools.js"></script>
+
+  
+
+  <script type="text/javascript" src="_static/js/theme.js"></script>
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
