@@ -29,6 +29,8 @@ for name in $(ls -A $HOME/$DOC_REPO); do
         ;;
         circle.yml) # Config so that build gh-pages branch.
         ;;
+        .git)
+        ;;
         *)
         git rm -rf $name
         ;;
