@@ -38,7 +38,7 @@ for name in $(ls -A $HOME/$DOC_REPO); do
 done
 
 # Copy the new build docs
-cp -R GENERATED_DOC_DIR ./
+cp -R $GENERATED_DOC_DIR ./
 
 git config --global user.email $EMAIL
 git config --global user.name $USERNAME
